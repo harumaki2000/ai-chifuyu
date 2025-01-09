@@ -40,7 +40,7 @@ export default function (text: string, words: (string | RegExp)[]): boolean {
 				text = text.replace(/です$/, "");
 				text = text.replace(/(\.|…)+$/, "");
 				text = text.replace(/[♪♥]+$/, "");
-				text = text.replace(/^藍/, "");
+				text = text.replace(/^花隈/, "") || text.replace(/^千冬/, "") || text.replace(/^花隈千冬/, "");
 				text = text.replace(/^ちゃん/, "");
 				text = text.replace(/、+$/, "");
 			}
