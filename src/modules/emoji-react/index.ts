@@ -74,7 +74,9 @@ export default class extends Module {
 		if (includes(note.text, ["ねこ", "cat"])) return react("😺");
 		if (includes(note.text, ["いぬ", "dog"])) return react("🐶");
 
-		if (includes(note.text, ["千冬", "chifuyu"])) return react("🙌");
-		if (includes(note.text, ["花隈", "hanakuma"])) return react("👓");
+		if (includes(note.text, ["千冬", "chifuyu","ちふゆ"])) return react("‪💚");
+		if (includes(note.text, ["花隈さん"])) return react("👓");
+		if (includes(note.text, ["夏色","花梨"])) return react("💜");
+		if (includes(note.text, ["小春","六花"])) return react("‎🤍");
 	}
 }
