@@ -5,7 +5,7 @@ services:
     #   context: .
     #   args:
     #     - enable_mecab=1
-    image: ghcr.io/lqvp/ai:latest
+    image: ghcr.io/lqvp/ai:chifuyu
     platform: linux/amd64
     environment:
       - TZ=Asia/Tokyo
