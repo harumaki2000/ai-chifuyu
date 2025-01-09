@@ -68,16 +68,8 @@ export default class extends Module {
 			return react(reaction);
 		}
 
-		if (includes(note.text, ["ぴざ"])) return react("🍕");
-		if (includes(note.text, ["ぷりん"])) return react("🍮");
-		if (includes(note.text, ["寿司", "sushi"]) || note.text === "すし")
-			return react("🍣");
-		if (includes(note.text, ["らーめん", "ramen"])) return react("🍜");
-		if (includes(note.text, ["かれー", "curry"])) return react("🍛");
-		if (includes(note.text, ["はんばーがー", "hamburger"])) return react("🍔");
-		if (includes(note.text, ["ほっとけーき", "hotcake"])) return react("🥞");
-		if (includes(note.text, ["ぱすた", "pasta"])) return react("🍝");
-		if (includes(note.text, ["けーき", "cake"])) return react("🍰");
+		if (includes(note.text, ["ドラム"])) return react("🥁");
+		if (includes(note.text, ["茶"])) return react("🍵");
 		if (includes(note.text, ["たこ", "octopus"])) return react("🐙");
 		if (includes(note.text, ["ねこ", "cat"])) return react("😺");
 		if (includes(note.text, ["いぬ", "dog"])) return react("🐶");
