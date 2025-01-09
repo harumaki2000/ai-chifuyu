@@ -7,7 +7,7 @@ on:
         description: 'Image tag (optional)'
         required: false
         type: string
-        default: 'latest'
+        default: 'chifuyu'
 
 env:
   REGISTRY: ghcr.io
