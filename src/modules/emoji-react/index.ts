@@ -78,5 +78,6 @@ export default class extends Module {
 		if (includes(note.text, ["花隈さん"])) return react("👓");
 		if (includes(note.text, ["夏色","花梨"])) return react("💜");
 		if (includes(note.text, ["小春","六花"])) return react("‎🤍");
+		if (includes(note.text, ["９時","くじ"])) return react("🕒");
 	}
 }
