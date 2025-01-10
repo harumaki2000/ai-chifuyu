@@ -69,8 +69,9 @@ Misskey用の日本語Botです。
 	"pollEnable": true
 }
 ```
-`docker-compose build` して `docker-compose up` すれば起動できます。
-`docker-compose.yml` の `enable_mecab` を `0` にすると、MeCabをインストールしないようにもできます。（メモリが少ない環境など）
+`docker-compose build` して `docker-compose up` すれば起動できます。※
+`docker-compose.yml` の `enable_mecab` を `0` にすると、MeCabをインストールしないようにもできます。（メモリが少ない環境など）  
+※`docker-compose.yml`にビルド済みイメージ記述済みなので`docker compose up -d`で起動できます。
 
 ## フォント
 一部の機能にはフォントが必要です。藍にはフォントは同梱されていないので、ご自身でフォントをインストールディレクトリに`font.ttf`という名前で設置してください。
