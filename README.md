@@ -2,8 +2,9 @@
 <p align="center">An Ai for Misskey. <a href="./torisetu.md">About Ai</a></p>
 
 ## これなに
-Misskey用の日本語Botです。
-小樽潮風Project・花隈千冬の公式二次創作設定に従って制作したBotです。
+Misskey用の日本語Botです。  
+小樽潮風高校Project・花隈千冬の公式二次創作設定に従って制作したBotです。  
+二次創作botです。
 
 ## インストール
 > Node.js と npm と MeCab (オプション) がインストールされている必要があります。
