@@ -7,6 +7,8 @@ import { genItem } from "@/vocabulary.js";
 
 export const blessing = [
 	"千冬吉",
+	"六花吉",
+	"花梨吉",
 	"ヨタ吉",
 	"ゼタ吉",
 	"エクサ吉",
