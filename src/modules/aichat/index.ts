@@ -1,283 +1,414 @@
-import { bindThis } from "@/decorators.js";
-import Module from "@/module.js";
-import serifs from "@/serifs.js";
-import Message from "@/message.js";
-import config from "@/config.js";
-import urlToBase64 from "@/utils/url2base64.js";
-import got from "got";
-import { Note } from "@/misskey/note.js";
+import { bindThis } from '@/decorators.js';
+import Module from '@/module.js';
+import serifs from '@/serifs.js';
+import Message from '@/message.js';
+import config from '@/config.js';
+import Friend from '@/friend.js';
+import urlToBase64 from '@/utils/url2base64.js';
+import got from 'got';
+import loki from 'lokijs';
 
 type AiChat = {
-	question: string;
-	prompt: string;
-	api: string;
-	key: string;
+	　question: string;
+    prompt: string;
+    api: string;
+    key: string;
+    history?: { role: string; content: string }[];
+    friendName?: string;
+};
+type base64File = {
+    type: string;
+    base64: string;
+    url?: string;
+};
+type GeminiParts = {
+    inlineData?: {
+        mimeType: string;
+        data: string;
+    };
+    fileData?: {
+        mimeType: string;
+        fileUri: string;
+    };
+    text?: string;
+}[];
+type GeminiSystemInstruction = {
+    role: string;
+    parts: [{ text: string }];
+};
+type GeminiContents = {
+    role: string;
+    parts: GeminiParts;
 };
 
-type Base64Image = {
-	type: string;
-	base64: string;
+type AiChatHist = {
+    postId: string;
+    createdAt: number;
+    type: string;
+    api?: string;
+    history?: {
+        role: string;
+        content: string;
+    }[];
 };
 
-const GEMINI_API_ENDPOINT =
-	"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
+const TYPE_GEMINI = 'gemini';
+const GEMINI_20_FLASH_API = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
+
+const RANDOMTALK_DEFAULT_PROBABILITY = 0.02; // デフォルトのrandomTalk確率
+const TIMEOUT_TIME = 1000 * 60 * 60 * 0.5; // aichatの返信を監視する時間
+const RANDOMTALK_DEFAULT_INTERVAL = 1000 * 60 * 60 * 12; // デフォルトのrandomTalk間隔
+
 
 export default class extends Module {
-	public readonly name = "aichat";
-	private repliedNoteIds: Set<string> = new Set();
+	public readonly name = 'aichat';
+    private aichatHist: loki.Collection<AiChatHist>;
+    private randomTalkProbability: number = RANDOMTALK_DEFAULT_PROBABILITY;
+    private randomTalkIntervalMinutes: number = RANDOMTALK_DEFAULT_INTERVAL;
 
-	@bindThis
-	public install() {
-		setInterval(this.replySocialTimelineNotes, 1000 * 60 * 60);
-		return {
-			mentionHook: this.mentionHook,
-		};
-	}
+    @bindThis
+    public install() {
+        this.aichatHist = this.ai.getCollection('aichatHist', {
+            indices: ['postId']
+        });
 
-	@bindThis
-	private async genTextByGemini(aiChat: AiChat, image: Base64Image | null) {
-		this.log("Generate Text By Gemini...");
-		let parts: (
-			| { text: string; inline_data?: undefined }
-			| { inline_data: { mime_type: string; data: string }; text?: undefined }
-		)[];
+        if (config.aichatRandomTalkProbability != undefined && !Number.isNaN(Number.parseFloat(config.aichatRandomTalkProbability))) {
+            this.randomTalkProbability = Number.parseFloat(config.aichatRandomTalkProbability);
+        }
+        if (config.aichatRandomTalkIntervalMinutes != undefined && !Number.isNaN(Number.parseInt(config.aichatRandomTalkIntervalMinutes))) {
+            this.randomTalkIntervalMinutes = 1000 * 60 * Number.parseInt(config.aichatRandomTalkIntervalMinutes);
+        }
+        this.log('aichatRandomTalkEnabled:' + config.aichatRandomTalkEnabled);
+        this.log('randomTalkProbability:' + this.randomTalkProbability);
+        this.log('randomTalkIntervalMinutes:' + (this.randomTalkIntervalMinutes / (60 * 1000)));
 
-		if (image === null) {
-			parts = [{ text: aiChat.prompt + aiChat.question }];
-		} else {
-			parts = [
-				{ text: aiChat.prompt + aiChat.question },
-				{
-					inline_data: {
-						mime_type: image.type,
-						data: image.base64,
-					},
-				},
-			];
-		}
+        if (config.aichatRandomTalkEnabled) {
+            setInterval(this.aichatRandomTalk, this.randomTalkIntervalMinutes);
+        }
 
-		const options = {
-			url: aiChat.api,
-			searchParams: {
-				key: aiChat.key,
-			},
-			json: {
-				contents: { parts: parts },
-			},
-		};
+        return {
+            mentionHook: this.mentionHook,
+            contextHook: this.contextHook,
+            timeoutCallback: this.timeoutCallback,
+        };
+    }
 
-		this.log(JSON.stringify(options));
+    @bindThis
+    private async genTextByGemini(aiChat: AiChat, files: base64File[]) {
+        this.log('Generate Text By Gemini...');
+        let parts: GeminiParts = [];
+        const now = new Date().toLocaleString('ja-JP', {
+            timeZone: 'Asia/Tokyo',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        let systemInstructionText = aiChat.prompt + "。また、現在日時は" + now + "であり、これは回答の参考にし、時刻を聞かれるまで時刻情報は提供しないこと(なお、他の日時は無効とすること)。";
+        if (aiChat.friendName != undefined) {
+            systemInstructionText += "なお、会話相手の名前は" + aiChat.friendName + "とする。";
+        }
+        const systemInstruction: GeminiSystemInstruction = { role: 'system', parts: [{ text: systemInstructionText }] };
 
-		try {
-			const res_data = await got
-				.post(options, { parseJson: (res) => JSON.parse(res) })
-				.json();
-			this.log(JSON.stringify(res_data));
+        parts = [{ text: aiChat.question }];
+        if (files.length >= 1) {
+            for (const file of files) {
+                parts.push({
+                    inlineData: {
+                        mimeType: file.type,
+                        data: file.base64,
+                    },
+                });
+            }
+        }
 
-			if (res_data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-				return res_data.candidates[0].content.parts[0].text;
-			}
-		} catch (err: unknown) {
-			this.log("Error By Call Gemini");
-			if (err instanceof Error) {
-				this.log(`${err.name}\n${err.message}\n${err.stack}`);
-			}
-		}
+        let contents: GeminiContents[] = [];
+        if (aiChat.history != null) {
+            aiChat.history.forEach(entry => {
+                contents.push({
+                    role: entry.role,
+                    parts: [{ text: entry.content }],
+                });
+            });
+        }
+        contents.push({ role: 'user', parts: parts });
 
-		return null;
-	}
+        let options = {
+            url: aiChat.api,
+            searchParams: {
+                key: aiChat.key,
+            },
+            json: {
+                contents: contents,
+                systemInstruction: systemInstruction,
+            },
+        };
+        this.log(JSON.stringify(options));
+        let res_data: any = null;
+        try {
+            res_data = await got.post(options, { parseJson: (res: string) => JSON.parse(res) }).json();
+            this.log(JSON.stringify(res_data));
+            if (res_data.hasOwnProperty('candidates')) {
+                if (res_data.candidates.length > 0) {
+                    if (res_data.candidates[0].hasOwnProperty('content')) {
+                        if (res_data.candidates[0].content.hasOwnProperty('parts')) {
+                            if (res_data.candidates[0].content.parts.length > 0) {
+                                if (res_data.candidates[0].content.parts[0].hasOwnProperty('text')) {
+                                    const responseText = res_data.candidates[0].content.parts[0].text;
+                                    return responseText;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (err: unknown) {
+            this.log('Error By Call Gemini');
+            if (err instanceof Error) {
+                this.log(`${err.name}\n${err.message}\n${err.stack}`);
+            }
+        }
+        return null;
+    }
 
-	@bindThis
-	private async note2base64Image(notesId: string) {
-		const noteData: any = await this.ai!.api("notes/show", { noteId: notesId });
-		let fileType: string | undefined, thumbnailUrl: string | undefined;
+    @bindThis
+    private async note2base64File(notesId: string) {
+        const noteData = await this.ai.api('notes/show', { noteId: notesId });
+        let files: base64File[] = [];
+        if (noteData !== null && noteData.hasOwnProperty('files')) {
+            for (let i = 0; i < noteData.files.length; i++) {
+                let fileType: string | undefined;
+                let fileUrl: string | undefined;
+                if (noteData.files[i].hasOwnProperty('type')) {
+                    fileType = noteData.files[i].type;
+                }
+                if (noteData.files[i].hasOwnProperty('thumbnailUrl') && noteData.files[i].thumbnailUrl) {
+                    fileUrl = noteData.files[i].thumbnailUrl;
+                } else if (noteData.files[i].hasOwnProperty('url') && noteData.files[i].url) {
+                    fileUrl = noteData.files[i].url;
+                }
+                if (fileType !== undefined && fileUrl !== undefined) {
+                    try {
+                        this.log('fileUrl:' + fileUrl);
+                        const file = await urlToBase64(fileUrl);
+                        const base64file: base64File = { type: fileType, base64: file };
+                        files.push(base64file);
+                    } catch (err: unknown) {
+                        if (err instanceof Error) {
+                            this.log(`${err.name}\n${err.message}\n${err.stack}`);
+                        }
+                    }
+                }
+            }
+        }
+        return files;
+    }
 
-		if (noteData?.files?.[0]) {
-			fileType = noteData.files[0].type;
-			thumbnailUrl = noteData.files[0].thumbnailUrl;
+    @bindThis
+    private async mentionHook(msg: Message) {
+        if (!msg.includes([this.name])) {
+            return false;
+        } else {
+            this.log('AiChat requested');
+        }
 
-			if (fileType && thumbnailUrl) {
-				try {
-					const image = await urlToBase64(thumbnailUrl);
-					return { type: fileType, base64: image } as Base64Image;
-				} catch (err: unknown) {
-					if (err instanceof Error) {
-						this.log(`${err.name}\n${err.message}\n${err.stack}`);
-					}
-				}
-			}
-		}
+        const conversationData = await this.ai.api('notes/conversation', { noteId: msg.id });
 
-		return null;
-	}
+        let exist: AiChatHist | null = null;
+        if (conversationData != undefined) {
+            for (const message of conversationData) {
+                exist = this.aichatHist.findOne({ postId: message.id });
+                if (exist != null) return false;
+            }
+        }
 
-	@bindThis
-	private async replySocialTimelineNotes() {
-		// configが存在しない場合やdisableRandomRepliesがtrueの場合は返信しない
-    if (!config || config.disableRandomReplies) return false;
+        let type = TYPE_GEMINI;
+        const current: AiChatHist = {
+            postId: msg.id,
+            createdAt: Date.now(),
+            type: type
+        };
+        if (msg.quoteId) {
+            const quotedNote = await this.ai.api("notes/show", { noteId: msg.quoteId });
+            current.history = [
+                { role: "user", content: "ユーザーが与えた前情報である、引用された文章: " + quotedNote.text },
+            ];
+        }
 
-		// random
-		const random = config.aichatRandomProbability || 0.4;
-		if (Math.random() > random) return false;
+        const result = await this.handleAiChat(current, msg);
 
-		const tl = (await this.ai?.api("notes/hybrid-timeline", {
-			limit: 10,
-		})) as Note[];
+        if (result) {
+            return { reaction: 'like' };
+        }
+        return false;
+    }
 
-		const interestedNotes = await Promise.all(
-			tl.map(async (note) => {
-				const noteDetails = (await this.ai?.api("notes/show", {
-					noteId: note.id,
-				})) as Note;
-				const relation = (await this.ai?.api("users/relation", {
-					userId: note.userId,
-				})) as any;
-				return {
-					note,
-					isInterested:
-						note.userId !== this.ai?.account.id &&
-						note.text != null &&
-						note.cw == null &&
-						noteDetails.reply !== null &&
-						(note.visibility === "public" || note.visibility === "home") &&
-						relation?.[0]?.isFollowing,
-				};
-			}),
-		).then((results) =>
-			results
-					.filter((r) => r.isInterested)
-					.map((r) => r.note)
-					.filter((note) => !this.repliedNoteIds.has(note.id)),
-	);
+    @bindThis
+    private async contextHook(key: any, msg: Message) {
+        this.log('contextHook...');
+        if (msg.text == null) return false;
 
-		if (interestedNotes.length === 0) return false;
+        const conversationData = await this.ai.api('notes/conversation', { noteId: msg.id });
 
-		const rnd = Math.floor(Math.random() * interestedNotes.length);
-		const note = interestedNotes[rnd];
+        if (conversationData == null || conversationData.length == 0) {
+            this.log('conversationData is nothing.');
+            return false;
+        }
 
-		if (!config.geminiApiKey) return false;
+        let exist: AiChatHist | null = null;
+        for (const message of conversationData) {
+            exist = this.aichatHist.findOne({ postId: message.id });
+            if (exist != null) break;
+        }
+        if (exist == null) {
+            this.log('conversationData is not found.');
+            return false;
+        }
 
-		let prompt = config.prompt || "";
-		try {
-			const userData = await this.ai?.api("users/show", {
-				userId: note.userId,
-			});
-			const name = userData?.name || userData?.username || "名無し";
-			prompt = prompt.replace("{name}", name);
-		} catch (err: unknown) {
-			this.log("Failed to get user data for name replacement.");
-		}
-		const base64Image = await this.note2base64Image(note.id);
+        this.unsubscribeReply(key);
+        this.aichatHist.remove(exist);
 
-		const aiChat = {
-			question: note.text!,
-			prompt: prompt,
-			api: GEMINI_API_ENDPOINT,
-			key: config.geminiApiKey,
-		};
+        const result = await this.handleAiChat(exist, msg);
 
-		const text = await this.genTextByGemini(aiChat, base64Image);
+        if (result) {
+            return { reaction: 'like' };
+        }
+        return false;
+    }
 
-		if (text == null) {
-			this.log(
-				"The result is invalid. It seems that tokens and other items need to be reviewed.",
-			);
-			return false;
-		}
+    @bindThis
+    private async aichatRandomTalk() {
+        this.log('AiChat(randomtalk) started');
+        const tl = await this.ai.api('notes/local-timeline', { limit: 30 });
+        const interestedNotes = tl.filter(note =>
+            note.userId !== this.ai.account.id &&
+            note.text != null &&
+            note.replyId == null &&
+            note.renoteId == null &&
+            note.cw == null &&
+            note.files.length == 0 &&
+            !note.user.isBot
+        );
 
-		this.log("Replying...");
-		this.ai?.post({
-			text: serifs.aichat.post(text),
-			replyId: note.id,
-	});
-	this.repliedNoteIds.add(note.id); // 返信したノートを記録する
-	}
+        if (interestedNotes == undefined || interestedNotes.length == 0) return false;
 
-	@bindThis
-	private async mentionHook(msg: Message) {
-		if (
-			msg.includes([this.name]) ||
-			(((await this.ai?.api("notes/show", { noteId: msg.replyId })) as Note)
-				?.userId === this.ai?.account.id &&
-				(
-					(await this.ai?.api("notes/show", { noteId: msg.replyId })) as Note
-				).text?.includes(this.name))
-		) {
-			this.log("AiChat requested");
-			const relation = (await this.ai?.api("users/relation", {
-				userId: msg.userId,
-			})) as any[];
-			if (!relation?.[0]?.isFollowing) {
-				this.log("The user is not following me:" + msg.userId);
-				msg.reply("あなたはaichatを実行する権限がありません。");
-				return false;
-			}
-		} else {
-			return false;
-		}
+        if (Math.random() >= this.randomTalkProbability) return false;
 
-		let question = msg.extractedText
-			.replace(new RegExp(this.name, "i"), "")
-			.trim();
+        const choseNote = interestedNotes[Math.floor(Math.random() * interestedNotes.length)];
 
-		let prompt = config.prompt || "";
-		let replayPrompt = config.replayPrompt || "";
+        const conversationData = await this.ai.api('notes/conversation', { noteId: choseNote.id });
 
-		// ユーザー名の置換を先に行う
-		try {
-			const userData = await this.ai?.api("users/show", { userId: msg.userId });
-			const name = userData?.name || userData?.username || "名無し";
-			prompt = prompt.replace("{name}", name);
-		} catch (err: unknown) {
-			this.log("Failed to get user data for name replacement.");
-		}
+        let exist: AiChatHist | null = null;
+        if (conversationData != undefined) {
+            for (const message of conversationData) {
+                exist = this.aichatHist.findOne({ postId: message.id });
+                if (exist != null) return false;
+            }
+        }
 
-		// 返信先の処理とプロンプトの連結
-		if (msg.replyId) {
-			const parentNote = (await this.ai?.api("notes/show", {
-				noteId: msg.replyId,
-			})) as Note;
-			if (parentNote?.userId === this.ai?.account.id && parentNote.text) {
-				// 親メッセージが自分の場合、replayPromptを使用
-				question = replayPrompt + parentNote.text + "\n" + question;
-			}
-		}
+        const friend: Friend | null = this.ai.lookupFriend(choseNote.userId);
+        if (friend == null || friend.love < 7 || choseNote.user.isBot) return false;
 
-		if (!config.geminiApiKey) {
-			msg.reply(serifs.aichat.nothing);
-			return false;
-		}
+        const current: AiChatHist = {
+            postId: choseNote.id,
+            createdAt: Date.now(),
+            type: TYPE_GEMINI
+        };
 
-		const base64Image = await this.note2base64Image(msg.id);
+        let targetedMessage = choseNote;
+        if (choseNote.extractedText == undefined) {
+            const data = await this.ai.api('notes/show', { noteId: choseNote.id });
+            targetedMessage = new Message(this.ai, data);
+        }
 
-		const aiChat = {
-			question: question,
-			prompt: prompt,
-			api: GEMINI_API_ENDPOINT,
-			key: config.geminiApiKey,
-		};
+        const result = await this.handleAiChat(current, targetedMessage);
 
-		const text = await this.genTextByGemini(aiChat, base64Image);
+        if (result) {
+            return { reaction: 'like' };
+        }
+        return false;
+    }
 
-		if (text == null) {
-			this.log(
-					"The result is invalid. It seems that tokens and other items need to be reviewed.",
-			);
-			msg.reply(serifs.aichat.error);
-			return false;
-		}
+    @bindThis
+    private async handleAiChat(exist: AiChatHist, msg: Message) {
+        let text: string, aiChat: AiChat;
+        let prompt: string = '';
+        if (config.prompt) {
+            prompt = config.prompt;
+        }
 
-		this.log("Replying...");
-		if (msg.replyId) {
-				// リプライにはタグを付けない
-				msg.reply(text);
-		} else {
-				// 通常投稿にはタグを追加
-				msg.reply(serifs.aichat.post(text));
-		}
+        const reName = RegExp(this.name, 'i');
+        const extractedText = msg.extractedText;
+        if (extractedText == undefined || extractedText.length == 0) return false;
 
-		return {
-				reaction: "like",
-		};
-	}
+        const question = extractedText.replace(reName, '').trim();
+
+        const friend: Friend | null = this.ai.lookupFriend(msg.userId);
+        let friendName: string | undefined;
+        if (friend != null && friend.name != null) {
+            friendName = friend.name;
+        } else if (msg.user.name) {
+            friendName = msg.user.name;
+        } else {
+            friendName = msg.user.username;
+        }
+
+        // Ensure Gemini API key is set
+        if (!config.geminiApiKey) {
+            msg.reply(serifs.aichat.nothing(exist.type));
+            return false;
+        }
+
+        aiChat = {
+            question: question,
+            prompt: prompt,
+            api: GEMINI_20_FLASH_API,
+            key: config.geminiApiKey,
+            history: exist.history,
+            friendName: friendName
+        };
+
+        const base64Files: base64File[] = await this.note2base64File(msg.id);
+        text = await this.genTextByGemini(aiChat, base64Files);
+
+        if (text == null) {
+            this.log('The result is invalid. It seems that tokens and other items need to be reviewed.')
+            msg.reply(serifs.aichat.error(exist.type));
+            return false;
+        }
+
+        msg.reply(serifs.aichat.post(text, exist.type)).then(reply => {
+            if (!exist.history) {
+                exist.history = [];
+            }
+            exist.history.push({ role: 'user', content: question });
+            exist.history.push({ role: 'model', content: text });
+            if (exist.history.length > 10) {
+                exist.history.shift();
+            }
+            this.aichatHist.insertOne({
+                postId: reply.id,
+                createdAt: Date.now(),
+                type: exist.type,
+                api: aiChat.api,
+                history: exist.history,
+                friendName: friendName
+            });
+
+            this.subscribeReply(reply.id, reply.id);
+            this.setTimeoutWithPersistence(TIMEOUT_TIME, { id: reply.id });
+        });
+        return true;
+    }
+
+    @bindThis
+    private async timeoutCallback({ id }) {
+        this.log('timeoutCallback...');
+        const exist = this.aichatHist.findOne({ postId: id });
+        this.unsubscribeReply(id);
+        if (exist != null) {
+            this.aichatHist.remove(exist);
+        }
+    }
 }
