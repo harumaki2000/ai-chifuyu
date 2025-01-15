@@ -14,9 +14,9 @@ type Config = {
 	checkEmojisAtOnce?: boolean;
 	geminiApiKey?: string;
 	prompt?: string;
-	replayPrompt?: string;
-	disableRandomReplies?: boolean;
-	aichatRandomProbability?: number;
+	aichatRandomTalkEnabled?: string;
+	aichatRandomTalkProbability?: string;
+	aichatRandomTalkIntervalMinutes?: string;
 	mecab?: string;
 	mecabDic?: string;
 	memoryDir?: string;
