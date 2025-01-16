@@ -1,14 +1,14 @@
-import { bindThis } from "@/decorators.js";
-import Module from "@/module.js";
-import Friend from "@/friend.js";
-import serifs from "@/serifs.js";
+import { bindThis } from '@/decorators.js';
+import Module from '@/module.js';
+import Friend from '@/friend.js';
+import serifs from '@/serifs.js';
 
 function zeroPadding(num: number, length: number): string {
-	return ("0000000000" + num).slice(-length);
+	return ('0000000000' + num).slice(-length);
 }
 
 export default class extends Module {
-	public readonly name = "birthday";
+	public readonly name = 'birthday';
 
 	@bindThis
 	public install() {
@@ -30,7 +30,7 @@ export default class extends Module {
 		const today = `${zeroPadding(m + 1, 2)}-${zeroPadding(d, 2)}`;
 
 		const birthFriends = this.ai.friends.find({
-			"user.birthday": { $regex: new RegExp("-" + today + "$") },
+			'user.birthday': { $regex: new RegExp('-' + today + '$') },
 		} as any);
 
 		birthFriends.forEach((f) => {

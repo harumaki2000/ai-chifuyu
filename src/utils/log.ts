@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import chalk from 'chalk';
 
 export default function (msg: string) {
 	const now = new Date();
@@ -7,5 +7,5 @@ export default function (msg: string) {
 }
 
 function zeroPad(num: number, length: number = 2): string {
-	return ("0000000000" + num).slice(-length);
+	return ('0000000000' + num).slice(-length);
 }

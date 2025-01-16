@@ -1,15 +1,15 @@
-import { bindThis } from "@/decorators.js";
-import Module from "@/module.js";
-import serifs from "@/serifs.js";
-import { genItem } from "@/vocabulary.js";
-import request from "axios";
+import { bindThis } from '@/decorators.js';
+import Module from '@/module.js';
+import serifs from '@/serifs.js';
+import { genItem } from '@/vocabulary.js';
+import request from 'axios';
 
 export default class extends Module {
-	public readonly name = "earthquake_warning";
+	public readonly name = 'earthquake_warning';
 
 	private URL = {
-		LATEST: "http://www.kmoni.bosai.go.jp/webservice/server/pros/latest.json",
-		BASE: "http://www.kmoni.bosai.go.jp/webservice/hypo/eew/",
+		LATEST: 'http://www.kmoni.bosai.go.jp/webservice/server/pros/latest.json',
+		BASE: 'http://www.kmoni.bosai.go.jp/webservice/hypo/eew/',
 	};
 	private diff_time = 0;
 	private last_100_id: String[] = [];
@@ -36,16 +36,16 @@ export default class extends Module {
 	}
 
 	private handleError = (error: any) => {
-		console.error("Earthquake warning module error:", error);
+		console.error('Earthquake warning module error:', error);
 		this.error_count++;
 
 		// If we've exceeded max error retries, stop trying
 		if (this.error_count > this.MAX_ERROR_RETRIES) {
 			console.error(
-				"Max error retries exceeded. Stopping earthquake warning module.",
+				'Max error retries exceeded. Stopping earthquake warning module.'
 			);
 			// Optionally send an alert or log
-			this.putmsg("地震警報モジュールで継続的なエラーが発生しています。");
+			this.putmsg('地震警報モジュールで継続的なエラーが発生しています。');
 		}
 
 		// Reset error count after cooldown
@@ -55,44 +55,44 @@ export default class extends Module {
 	};
 
 	private timestr_to_obj(str: String) {
-		let dt = str.split(" ");
-		let ymd = dt[0].split("/");
-		let hms = dt[1].split(":");
+		let dt = str.split(' ');
+		let ymd = dt[0].split('/');
+		let hms = dt[1].split(':');
 		return new Date(
 			parseInt(ymd[0], 10),
 			parseInt(ymd[1], 10) - 1,
 			parseInt(ymd[2], 10),
 			parseInt(hms[0], 10),
 			parseInt(hms[1], 10),
-			parseInt(hms[2], 10),
+			parseInt(hms[2], 10)
 		);
 	}
 
 	private timedate_to_str(d: Date) {
 		return (
 			String(d.getFullYear()) +
-			("0" + String(d.getMonth() + 1)).slice(-2) +
-			("0" + String(d.getDate())).slice(-2) +
-			("0" + String(d.getHours())).slice(-2) +
-			("0" + String(d.getMinutes())).slice(-2) +
-			("0" + String(d.getSeconds())).slice(-2)
+			('0' + String(d.getMonth() + 1)).slice(-2) +
+			('0' + String(d.getDate())).slice(-2) +
+			('0' + String(d.getHours())).slice(-2) +
+			('0' + String(d.getMinutes())).slice(-2) +
+			('0' + String(d.getSeconds())).slice(-2)
 		);
 	}
 
 	private timedate_to_ja_str(d: Date) {
 		return (
 			String(d.getFullYear()) +
-			"/" +
-			("0" + String(d.getMonth() + 1)).slice(-2) +
-			"/" +
-			("0" + String(d.getDate())).slice(-2) +
-			" " +
-			("0" + String(d.getHours())).slice(-2) +
-			":" +
-			("0" + String(d.getMinutes())).slice(-2) +
-			":" +
-			("0" + String(d.getSeconds())).slice(-2) +
-			" JST"
+			'/' +
+			('0' + String(d.getMonth() + 1)).slice(-2) +
+			'/' +
+			('0' + String(d.getDate())).slice(-2) +
+			' ' +
+			('0' + String(d.getHours())).slice(-2) +
+			':' +
+			('0' + String(d.getMinutes())).slice(-2) +
+			':' +
+			('0' + String(d.getSeconds())).slice(-2) +
+			' JST'
 		);
 	}
 
@@ -124,14 +124,14 @@ export default class extends Module {
 				await request.get(
 					this.URL.BASE +
 						this.timedate_to_str(
-							new Date(new Date().getTime() + this.diff_time),
+							new Date(new Date().getTime() + this.diff_time)
 						) +
-						".json",
+						'.json'
 				)
 			).data;
 			this.now_loading = false;
 
-			if (response.result.message == "" && response.is_training == false) {
+			if (response.result.message == '' && response.is_training == false) {
 				// have data
 				if (this.last_100_id.indexOf(response.report_id) == -1) {
 					// catch first
@@ -165,50 +165,50 @@ export default class extends Module {
 			return; // 震度４未満の場合、マグニチュード4.0未満は無視
 		}
 		this.last_100_id.push(response.report_id);
-		let msg = "";
+		let msg = '';
 		if (clc < 4) {
 			msg += this.rand_choice([
-				"ゆれ……",
-				"ゆれ?",
-				"地震ですかね？",
-				"揺れそうな気がします！",
-				"ゆ……？",
-				"ゆ？",
-				"ぽよん！",
-				":blobbounce:",
+				'ゆれ……',
+				'ゆれ?',
+				'地震ですかね？',
+				'揺れそうな気がします！',
+				'ゆ……？',
+				'ゆ？',
+				'ぽよん！',
+				':blobbounce:',
 			]);
 		} else if (clc == 4) {
-			msg += this.rand_choice(["ゆれ……！", "地震です！！", "結構揺れます！"]);
+			msg += this.rand_choice(['ゆれ……！', '地震です！！', '結構揺れます！']);
 		} else if (clc == 5) {
 			msg += this.rand_choice([
-				"ゆれます……！　おおきいです！！",
-				"かなり揺れます！",
+				'ゆれます……！　おおきいです！！',
+				'かなり揺れます！',
 			]);
 		} else if (clc == 6) {
-			msg += this.rand_choice(["大地震です！！", "めちゃくちゃ揺れます！"]);
+			msg += this.rand_choice(['大地震です！！', 'めちゃくちゃ揺れます！']);
 		} else if (clc >= 7) {
-			msg += this.rand_choice(["！！　大地震です！！"]);
+			msg += this.rand_choice(['！！　大地震です！！']);
 		}
-		msg += "\n\n";
+		msg += '\n\n';
 		msg +=
-			this.timedate_to_ja_str(new Date()) + "頃、地震速報を受信しました！\n";
+			this.timedate_to_ja_str(new Date()) + '頃、地震速報を受信しました！\n';
 		msg +=
 			response.region_name +
-			"あたりで震度" +
+			'あたりで震度' +
 			response.calcintensity +
-			"位の揺れが予想されます！\n";
+			'位の揺れが予想されます！\n';
 		msg +=
-			"マグニチュードは" +
+			'マグニチュードは' +
 			response.magunitude +
-			"、震源の深さは" +
+			'、震源の深さは' +
 			response.depth +
-			"みたいです。\n";
+			'みたいです。\n';
 		await this.putmsg(msg);
 	}
 
 	private async do_cancel(response) {
 		let msg =
-			"さっき" + response.region_name + "で揺れたのは気のせいみたいです！";
+			'さっき' + response.region_name + 'で揺れたのは気のせいみたいです！';
 		await this.putmsg(msg);
 	}
 
@@ -222,7 +222,7 @@ export default class extends Module {
 				text: msg,
 			});
 		} catch (error) {
-			console.error("Error sending message:", error);
+			console.error('Error sending message:', error);
 		}
 	}
 }

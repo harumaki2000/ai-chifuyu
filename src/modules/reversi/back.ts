@@ -6,32 +6,32 @@
  * 切断されてしまうので、別々のプロセスで行うようにします
  */
 
-import got from "got";
-import * as Reversi from "./engine.js";
-import config from "@/config.js";
-import serifs from "@/serifs.js";
-import type { User } from "@/misskey/user.js";
+import got from 'got';
+import * as Reversi from './engine.js';
+import config from '@/config.js';
+import serifs from '@/serifs.js';
+import type { User } from '@/misskey/user.js';
 
 function getUserName(user) {
 	return user.name || user.username;
 }
 
 const titles = [
-	"さん",
-	"サン",
-	"ｻﾝ",
-	"㌠",
-	"ちゃん",
-	"チャン",
-	"ﾁｬﾝ",
-	"君",
-	"くん",
-	"クン",
-	"ｸﾝ",
-	"先生",
-	"せんせい",
-	"センセイ",
-	"ｾﾝｾｲ",
+	'さん',
+	'サン',
+	'ｻﾝ',
+	'㌠',
+	'ちゃん',
+	'チャン',
+	'ﾁｬﾝ',
+	'君',
+	'くん',
+	'クン',
+	'ｸﾝ',
+	'先生',
+	'せんせい',
+	'センセイ',
+	'ｾﾝｾｲ',
 ];
 
 class Session {
@@ -76,13 +76,13 @@ class Session {
 
 	private get userName(): string {
 		let name = getUserName(this.user);
-		if (name.includes("$") || name.includes("<") || name.includes("*"))
+		if (name.includes('$') || name.includes('<') || name.includes('*'))
 			name = this.user.username;
-		return `?[${name}](${config.host}/@${this.user.username})${titles.some((x) => name.endsWith(x)) ? "" : "さん"}`;
+		return `?[${name}](${config.host}/@${this.user.username})${titles.some((x) => name.endsWith(x)) ? '' : 'さん'}`;
 	}
 
 	private get strength(): number {
-		return this.form.find((i) => i.id == "strength").value;
+		return this.form.find((i) => i.id == 'strength').value;
 	}
 
 	private get isSettai(): boolean {
@@ -90,7 +90,7 @@ class Session {
 	}
 
 	private get allowPost(): boolean {
-		return this.form.find((i) => i.id == "publish").value;
+		return this.form.find((i) => i.id == 'publish').value;
 	}
 
 	private get url(): string {
@@ -98,21 +98,21 @@ class Session {
 	}
 
 	constructor() {
-		process.on("message", this.onMessage);
+		process.on('message', this.onMessage);
 	}
 
 	private onMessage = async (msg: any) => {
 		switch (msg.type) {
-			case "_init_":
+			case '_init_':
 				this.onInit(msg.body);
 				break;
-			case "started":
+			case 'started':
 				this.onStarted(msg.body);
 				break;
-			case "ended":
+			case 'ended':
 				this.onEnded(msg.body);
 				break;
-			case "log":
+			case 'log':
 				this.onLog(msg.body);
 				break;
 		}
@@ -133,7 +133,7 @@ class Session {
 		if (this.game.canPutEverywhere) {
 			// 対応してない
 			process.send!({
-				type: "ended",
+				type: 'ended',
 			});
 			process.exit();
 		}
@@ -151,14 +151,14 @@ class Session {
 		});
 
 		this.maxTurn =
-			this.engine.map.filter((p) => p === "empty").length -
+			this.engine.map.filter((p) => p === 'empty').length -
 			this.engine.board.filter((x) => x != null).length;
 
 		//#region 隅の位置計算など
 
 		//#region 隅
 		this.engine.map.forEach((pix, i) => {
-			if (pix == "null") return;
+			if (pix == 'null') return;
 
 			const [x, y] = this.engine.posToXy(i);
 			const get = (x, y) => {
@@ -168,7 +168,7 @@ class Session {
 					x >= this.engine.mapWidth ||
 					y >= this.engine.mapHeight
 				)
-					return "null";
+					return 'null';
 				return this.engine.mapDataGet(this.engine.xyToPos(x, y));
 			};
 
@@ -176,19 +176,19 @@ class Session {
 				// -
 				//  +
 				//   -
-				(get(x - 1, y - 1) == "empty" && get(x + 1, y + 1) == "empty") ||
+				(get(x - 1, y - 1) == 'empty' && get(x + 1, y + 1) == 'empty') ||
 				//  -
 				//  +
 				//  -
-				(get(x, y - 1) == "empty" && get(x, y + 1) == "empty") ||
+				(get(x, y - 1) == 'empty' && get(x, y + 1) == 'empty') ||
 				//   -
 				//  +
 				// -
-				(get(x + 1, y - 1) == "empty" && get(x - 1, y + 1) == "empty") ||
+				(get(x + 1, y - 1) == 'empty' && get(x - 1, y + 1) == 'empty') ||
 				//
 				// -+-
 				//
-				(get(x - 1, y) == "empty" && get(x + 1, y) == "empty");
+				(get(x - 1, y) == 'empty' && get(x + 1, y) == 'empty');
 
 			const isSumi = !isNotSumi;
 
@@ -198,7 +198,7 @@ class Session {
 
 		//#region 隅の隣
 		this.engine.map.forEach((pix, i) => {
-			if (pix == "null") return;
+			if (pix == 'null') return;
 			if (this.sumiIndexes.includes(i)) return;
 
 			const [x, y] = this.engine.posToXy(i);
@@ -245,7 +245,7 @@ class Session {
 	private onEnded = async (msg: any) => {
 		// ストリームから切断
 		process.send!({
-			type: "ended",
+			type: 'ended',
 		});
 
 		let text: string;
@@ -289,7 +289,7 @@ class Session {
 	private onLog = (log: any) => {
 		if (log.id == null || !this.appliedOps.includes(log.id)) {
 			switch (log.operation) {
-				case "put": {
+				case 'put': {
 					this.engine.putStone(log.pos);
 					this.currentTurn++;
 
@@ -346,7 +346,7 @@ class Session {
 
 	private think = () => {
 		console.log(`(${this.currentTurn}/${this.maxTurn}) Thinking...`);
-		console.time("think");
+		console.time('think');
 
 		// 接待モードのときは、全力(5手先読みくらい)で負けるようにする
 		// TODO: 接待のときは、どちらかというと「自分が不利になる手を選ぶ」というよりは、「相手に角を取らせられる手を選ぶ」ように思考する
@@ -364,7 +364,7 @@ class Session {
 			pos: number,
 			alpha = -Infinity,
 			beta = Infinity,
-			depth = 0,
+			depth = 0
 		): number => {
 			// 試し打ち
 			this.engine.putStone(pos);
@@ -453,8 +453,8 @@ class Session {
 		const scores = cans.map((p) => dive(p));
 		const pos = cans[scores.indexOf(Math.max(...scores))];
 
-		console.log("Thinked:", pos);
-		console.timeEnd("think");
+		console.log('Thinked:', pos);
+		console.timeEnd('think');
 
 		this.engine.putStone(pos);
 		this.currentTurn++;
@@ -462,7 +462,7 @@ class Session {
 		setTimeout(() => {
 			const id = Math.random().toString(36).slice(2);
 			process.send!({
-				type: "putStone",
+				type: 'putStone',
 				pos,
 				id,
 			});
@@ -494,7 +494,7 @@ class Session {
 			const body = {
 				i: config.i,
 				text: text,
-				visibility: "home",
+				visibility: 'home',
 			} as any;
 
 			if (renote) {

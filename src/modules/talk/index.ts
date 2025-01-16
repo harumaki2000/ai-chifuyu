@@ -1,12 +1,12 @@
-import { bindThis } from "@/decorators.js";
-import { HandlerResult } from "@/ai.js";
-import Module from "@/module.js";
-import Message from "@/message.js";
-import serifs, { getSerif } from "@/serifs.js";
-import getDate from "@/utils/get-date.js";
+import { bindThis } from '@/decorators.js';
+import { HandlerResult } from '@/ai.js';
+import Module from '@/module.js';
+import Message from '@/message.js';
+import serifs, { getSerif } from '@/serifs.js';
+import getDate from '@/utils/get-date.js';
 
 export default class extends Module {
-	public readonly name = "talk";
+	public readonly name = 'talk';
 
 	@bindThis
 	public install() {
@@ -33,9 +33,7 @@ export default class extends Module {
 			this.ote(msg) ||
 			this.ponkotu(msg) ||
 			this.rmrf(msg) ||
-			this.shutdown(msg) ||
-			this.sexualharassment(msg) ||
-			this.breathinginai(msg)
+			this.shutdown(msg)
 		);
 	}
 
@@ -59,53 +57,53 @@ export default class extends Module {
 		};
 
 		// 末尾のエクスクラメーションマーク
-		const tension = (msg.text.match(/[！!]{2,}/g) || [""])
+		const tension = (msg.text.match(/[！!]{2,}/g) || [''])
 			.sort((a, b) => (a.length < b.length ? 1 : -1))[0]
 			.substr(1);
 
-		if (msg.includes(["こんにちは", "こんにちわ"])) {
+		if (msg.includes(['こんにちは', 'こんにちわ'])) {
 			msg.reply(serifs.core.hello(msg.friend.name));
 			incLove();
 			return true;
 		}
 
-		if (msg.includes(["こんばんは", "こんばんわ"])) {
+		if (msg.includes(['こんばんは', 'こんばんわ'])) {
 			msg.reply(serifs.core.helloNight(msg.friend.name));
 			incLove();
 			return true;
 		}
 
-		if (msg.includes(["おは", "おっは", "お早う"])) {
+		if (msg.includes(['おは', 'おっは', 'お早う'])) {
 			msg.reply(serifs.core.goodMorning(tension, msg.friend.name));
 			incLove();
 			return true;
 		}
 
-		if (msg.includes(["おやすみ", "お休み"])) {
+		if (msg.includes(['おやすみ', 'お休み'])) {
 			msg.reply(serifs.core.goodNight(msg.friend.name));
 			incLove();
 			return true;
 		}
 
 		if (
-			msg.includes(["行ってくる", "行ってきます", "いってくる", "いってきます"])
+			msg.includes(['行ってくる', '行ってきます', 'いってくる', 'いってきます'])
 		) {
 			msg.reply(
 				msg.friend.love >= 7
 					? serifs.core.itterassyai.love(msg.friend.name)
-					: serifs.core.itterassyai.normal(msg.friend.name),
+					: serifs.core.itterassyai.normal(msg.friend.name)
 			);
 			incLove();
 			return true;
 		}
 
-		if (msg.includes(["ただいま"])) {
+		if (msg.includes(['ただいま'])) {
 			msg.reply(
 				msg.friend.love >= 15
 					? serifs.core.okaeri.love2(msg.friend.name)
 					: msg.friend.love >= 7
 						? getSerif(serifs.core.okaeri.love(msg.friend.name))
-						: serifs.core.okaeri.normal(msg.friend.name),
+						: serifs.core.okaeri.normal(msg.friend.name)
 			);
 			incLove();
 			return true;
@@ -125,7 +123,7 @@ export default class extends Module {
 		const match2 = msg.extractedText.match(/(.+?)る(から|ので)(褒|ほ)めて/);
 		if (match2) {
 			msg.reply(
-				getSerif(serifs.core.erait.specify(match2[1], msg.friend.name)),
+				getSerif(serifs.core.erait.specify(match2[1], msg.friend.name))
 			);
 			return true;
 		}
@@ -133,12 +131,12 @@ export default class extends Module {
 		const match3 = msg.extractedText.match(/(.+?)だから(褒|ほ)めて/);
 		if (match3) {
 			msg.reply(
-				getSerif(serifs.core.erait.specify(match3[1], msg.friend.name)),
+				getSerif(serifs.core.erait.specify(match3[1], msg.friend.name))
 			);
 			return true;
 		}
 
-		if (!msg.includes(["褒めて", "ほめて"])) return false;
+		if (!msg.includes(['褒めて', 'ほめて'])) return false;
 
 		msg.reply(getSerif(serifs.core.erait.general(msg.friend.name)));
 
@@ -147,7 +145,7 @@ export default class extends Module {
 
 	@bindThis
 	private omedeto(msg: Message): boolean {
-		if (!msg.includes(["おめでと"])) return false;
+		if (!msg.includes(['おめでと'])) return false;
 
 		msg.reply(serifs.core.omedeto(msg.friend.name));
 
@@ -156,7 +154,7 @@ export default class extends Module {
 
 	@bindThis
 	private nadenade(msg: Message): boolean {
-		if (!msg.includes(["なでなで"])) return false;
+		if (!msg.includes(['なでなで'])) return false;
 
 		//#region 1日に1回だけ親愛度を上げる(嫌われてない場合のみ)
 		if (msg.friend.love >= 0) {
@@ -187,8 +185,8 @@ export default class extends Module {
 									? serifs.core.nadenade.hate2
 									: msg.friend.love <= -1
 										? serifs.core.nadenade.hate1
-										: serifs.core.nadenade.normal,
-			),
+										: serifs.core.nadenade.normal
+			)
 		);
 
 		return true;
@@ -196,7 +194,7 @@ export default class extends Module {
 
 	@bindThis
 	private kawaii(msg: Message): boolean {
-		if (!msg.includes(["かわいい", "可愛い"])) return false;
+		if (!msg.includes(['かわいい', '可愛い'])) return false;
 
 		msg.reply(
 			getSerif(
@@ -204,8 +202,8 @@ export default class extends Module {
 					? serifs.core.kawaii.love
 					: msg.friend.love <= -3
 						? serifs.core.kawaii.hate
-						: serifs.core.kawaii.normal,
-			),
+						: serifs.core.kawaii.normal
+			)
 		);
 
 		return true;
@@ -213,7 +211,7 @@ export default class extends Module {
 
 	@bindThis
 	private suki(msg: Message): boolean {
-		if (!msg.or(["好き", "すき"])) return false;
+		if (!msg.or(['好き', 'すき'])) return false;
 
 		msg.reply(
 			msg.friend.love >= 5
@@ -222,7 +220,7 @@ export default class extends Module {
 					: serifs.core.suki.normal
 				: msg.friend.love <= -3
 					? serifs.core.suki.hate
-					: serifs.core.suki.normal,
+					: serifs.core.suki.normal
 		);
 
 		return true;
@@ -230,7 +228,7 @@ export default class extends Module {
 
 	@bindThis
 	private hug(msg: Message): boolean {
-		if (!msg.or(["ぎゅ", "むぎゅ", /^はぐ(し(て|よ|よう)?)?$/])) return false;
+		if (!msg.or(['ぎゅ', 'むぎゅ', /^はぐ(し(て|よ|よう)?)?$/])) return false;
 
 		//#region 前のハグから1分経ってない場合は返信しない
 		// これは、「ハグ」と言って「ぎゅー」と返信したとき、相手が
@@ -256,7 +254,7 @@ export default class extends Module {
 				? serifs.core.hug.love
 				: msg.friend.love <= -3
 					? serifs.core.hug.hate
-					: serifs.core.hug.normal,
+					: serifs.core.hug.normal
 		);
 
 		return true;
@@ -264,14 +262,14 @@ export default class extends Module {
 
 	@bindThis
 	private humu(msg: Message): boolean {
-		if (!msg.includes(["踏んで"])) return false;
+		if (!msg.includes(['踏んで'])) return false;
 
 		msg.reply(
 			msg.friend.love >= 5
 				? serifs.core.humu.love
 				: msg.friend.love <= -3
 					? serifs.core.humu.hate
-					: serifs.core.humu.normal,
+					: serifs.core.humu.normal
 		);
 
 		return true;
@@ -279,14 +277,14 @@ export default class extends Module {
 
 	@bindThis
 	private batou(msg: Message): boolean {
-		if (!msg.includes(["罵倒して", "罵って"])) return false;
+		if (!msg.includes(['罵倒して', '罵って'])) return false;
 
 		msg.reply(
 			msg.friend.love >= 5
 				? serifs.core.batou.love
 				: msg.friend.love <= -5
 					? serifs.core.batou.hate
-					: serifs.core.batou.normal,
+					: serifs.core.batou.normal
 		);
 
 		return true;
@@ -294,7 +292,7 @@ export default class extends Module {
 
 	@bindThis
 	private itai(msg: Message): boolean {
-		if (!msg.or(["痛い", "いたい"]) && !msg.extractedText.endsWith("痛い"))
+		if (!msg.or(['痛い', 'いたい']) && !msg.extractedText.endsWith('痛い'))
 			return false;
 
 		msg.reply(serifs.core.itai(msg.friend.name));
@@ -304,14 +302,14 @@ export default class extends Module {
 
 	@bindThis
 	private ote(msg: Message): boolean {
-		if (!msg.or(["お手"])) return false;
+		if (!msg.or(['お手'])) return false;
 
 		msg.reply(
 			msg.friend.love >= 10
 				? serifs.core.ote.love2
 				: msg.friend.love >= 5
 					? serifs.core.ote.love1
-					: serifs.core.ote.normal,
+					: serifs.core.ote.normal
 		);
 
 		return true;
@@ -319,76 +317,34 @@ export default class extends Module {
 
 	@bindThis
 	private ponkotu(msg: Message): boolean | HandlerResult {
-		if (!msg.includes(["ぽんこつ"])) return false;
+		if (!msg.includes(['ぽんこつ'])) return false;
 
 		msg.friend.decLove();
 
 		return {
-			reaction: "angry",
+			reaction: 'angry',
 		};
 	}
 
 	@bindThis
 	private rmrf(msg: Message): boolean | HandlerResult {
-		if (!msg.includes(["rm -rf"])) return false;
+		if (!msg.includes(['rm -rf'])) return false;
 
 		msg.friend.decLove();
 
 		return {
-			reaction: "angry",
+			reaction: 'angry',
 		};
 	}
 
 	@bindThis
 	private shutdown(msg: Message): boolean | HandlerResult {
-		if (!msg.includes(["shutdown"])) return false;
+		if (!msg.includes(['shutdown'])) return false;
 
 		msg.reply(serifs.core.shutdown);
 
 		return {
-			reaction: "confused",
+			reaction: 'confused',
 		};
-	}
-
-	@bindThis
-	private sexualharassment(msg: Message): boolean | HandlerResult {
-		if (
-			!msg.includes([
-				"えっちしよ",
-				"えっちして",
-				"エッチ",
-				"脱いで",
-				"脱げ",
-				"交尾",
-				"パンツの色",
-			])
-		)
-			return false;
-
-		msg.friend.decLove();
-		msg.reply(serifs.core.sexualharassment);
-
-		return {
-			reaction: "angry",
-		};
-	}
-
-	@bindThis
-	private breathinginai(msg: Message): boolean | HandlerResult {
-		if (!msg.includes(["吸う"])) return false;
-
-		msg.reply(
-			msg.friend.love >= 5
-				? serifs.core.breathinginai.love
-				: msg.friend.love <= 0
-					? serifs.core.breathinginai.hate
-					: serifs.core.breathinginai.normal,
-		);
-
-		if (msg.friend.love <= 0) {
-			msg.friend.decLove();
-		}
-
-		return true;
 	}
 }

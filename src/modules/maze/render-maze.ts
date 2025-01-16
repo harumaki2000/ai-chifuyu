@@ -1,8 +1,8 @@
-import gen from "random-seed";
-import { createCanvas } from "canvas";
+import gen from 'random-seed';
+import { createCanvas } from 'canvas';
 
-import { CellType } from "./maze.js";
-import { themes } from "./themes.js";
+import { CellType } from './maze.js';
+import { themes } from './themes.js';
 
 const imageSize = 4096; // px
 const margin = 96 * 4;
@@ -15,8 +15,8 @@ export function renderMaze(seed, maze: CellType[][]) {
 	const colors = themes[rand(themes.length)];
 
 	const canvas = createCanvas(imageSize, imageSize);
-	const ctx = canvas.getContext("2d");
-	ctx.antialias = "none";
+	const ctx = canvas.getContext('2d');
+	ctx.antialias = 'none';
 
 	ctx.fillStyle = colors.bg1;
 	ctx.beginPath();
@@ -28,7 +28,7 @@ export function renderMaze(seed, maze: CellType[][]) {
 		margin / 2,
 		margin / 2,
 		imageSize - (margin / 2) * 2,
-		imageSize - (margin / 2) * 2,
+		imageSize - (margin / 2) * 2
 	);
 
 	// Draw
@@ -62,13 +62,13 @@ export function renderMaze(seed, maze: CellType[][]) {
 				x + markerMargin,
 				y + markerMargin,
 				size - markerMargin * 2,
-				size - markerMargin * 2,
+				size - markerMargin * 2
 			);
 		}
 
 		ctx.strokeStyle = colors.wall;
 		ctx.lineWidth = wallThickness;
-		ctx.lineCap = "square";
+		ctx.lineCap = 'square';
 
 		function line(ax, ay, bx, by) {
 			ctx.beginPath();
@@ -232,7 +232,7 @@ export function renderMaze(seed, maze: CellType[][]) {
 			const mark =
 				(x === 0 && y === 0) || (x === mazeSize - 1 && y === mazeSize - 1);
 
-			if (cell === "left")
+			if (cell === 'left')
 				drawCell(
 					ctx,
 					actualX,
@@ -242,9 +242,9 @@ export function renderMaze(seed, maze: CellType[][]) {
 					false,
 					false,
 					false,
-					mark,
+					mark
 				);
-			if (cell === "right")
+			if (cell === 'right')
 				drawCell(
 					ctx,
 					actualX,
@@ -254,9 +254,9 @@ export function renderMaze(seed, maze: CellType[][]) {
 					true,
 					false,
 					false,
-					mark,
+					mark
 				);
-			if (cell === "top")
+			if (cell === 'top')
 				drawCell(
 					ctx,
 					actualX,
@@ -266,9 +266,9 @@ export function renderMaze(seed, maze: CellType[][]) {
 					false,
 					true,
 					false,
-					mark,
+					mark
 				);
-			if (cell === "bottom")
+			if (cell === 'bottom')
 				drawCell(
 					ctx,
 					actualX,
@@ -278,9 +278,9 @@ export function renderMaze(seed, maze: CellType[][]) {
 					false,
 					false,
 					true,
-					mark,
+					mark
 				);
-			if (cell === "leftTop")
+			if (cell === 'leftTop')
 				drawCell(
 					ctx,
 					actualX,
@@ -290,9 +290,9 @@ export function renderMaze(seed, maze: CellType[][]) {
 					false,
 					true,
 					false,
-					mark,
+					mark
 				);
-			if (cell === "leftBottom")
+			if (cell === 'leftBottom')
 				drawCell(
 					ctx,
 					actualX,
@@ -302,9 +302,9 @@ export function renderMaze(seed, maze: CellType[][]) {
 					false,
 					false,
 					true,
-					mark,
+					mark
 				);
-			if (cell === "rightTop")
+			if (cell === 'rightTop')
 				drawCell(
 					ctx,
 					actualX,
@@ -314,9 +314,9 @@ export function renderMaze(seed, maze: CellType[][]) {
 					true,
 					true,
 					false,
-					mark,
+					mark
 				);
-			if (cell === "rightBottom")
+			if (cell === 'rightBottom')
 				drawCell(
 					ctx,
 					actualX,
@@ -326,9 +326,9 @@ export function renderMaze(seed, maze: CellType[][]) {
 					true,
 					false,
 					true,
-					mark,
+					mark
 				);
-			if (cell === "leftRightTop")
+			if (cell === 'leftRightTop')
 				drawCell(
 					ctx,
 					actualX,
@@ -338,9 +338,9 @@ export function renderMaze(seed, maze: CellType[][]) {
 					true,
 					true,
 					false,
-					mark,
+					mark
 				);
-			if (cell === "leftRightBottom")
+			if (cell === 'leftRightBottom')
 				drawCell(
 					ctx,
 					actualX,
@@ -350,9 +350,9 @@ export function renderMaze(seed, maze: CellType[][]) {
 					true,
 					false,
 					true,
-					mark,
+					mark
 				);
-			if (cell === "leftTopBottom")
+			if (cell === 'leftTopBottom')
 				drawCell(
 					ctx,
 					actualX,
@@ -362,9 +362,9 @@ export function renderMaze(seed, maze: CellType[][]) {
 					false,
 					true,
 					true,
-					mark,
+					mark
 				);
-			if (cell === "rightTopBottom")
+			if (cell === 'rightTopBottom')
 				drawCell(
 					ctx,
 					actualX,
@@ -374,9 +374,9 @@ export function renderMaze(seed, maze: CellType[][]) {
 					true,
 					true,
 					true,
-					mark,
+					mark
 				);
-			if (cell === "leftRight")
+			if (cell === 'leftRight')
 				drawCell(
 					ctx,
 					actualX,
@@ -386,9 +386,9 @@ export function renderMaze(seed, maze: CellType[][]) {
 					true,
 					false,
 					false,
-					mark,
+					mark
 				);
-			if (cell === "topBottom")
+			if (cell === 'topBottom')
 				drawCell(
 					ctx,
 					actualX,
@@ -398,9 +398,9 @@ export function renderMaze(seed, maze: CellType[][]) {
 					false,
 					true,
 					true,
-					mark,
+					mark
 				);
-			if (cell === "cross")
+			if (cell === 'cross')
 				drawCell(ctx, actualX, actualY, cellSize, true, true, true, true, mark);
 		}
 	}

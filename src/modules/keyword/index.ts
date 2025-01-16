@@ -1,9 +1,9 @@
-import { bindThis } from "@/decorators.js";
-import loki from "lokijs";
-import Module from "@/module.js";
-import config from "@/config.js";
-import serifs from "@/serifs.js";
-import { mecab } from "./mecab.js";
+import { bindThis } from '@/decorators.js';
+import loki from 'lokijs';
+import Module from '@/module.js';
+import config from '@/config.js';
+import serifs from '@/serifs.js';
+import { mecab } from './mecab.js';
 
 function kanaToHira(str: string) {
 	return str.replace(/[\u30a1-\u30f6]/g, (match) => {
@@ -13,7 +13,7 @@ function kanaToHira(str: string) {
 }
 
 export default class extends Module {
-	public readonly name = "keyword";
+	public readonly name = 'keyword';
 
 	private learnedKeywords: loki.Collection<{
 		keyword: string;
@@ -24,8 +24,8 @@ export default class extends Module {
 	public install() {
 		if (!config.keywordEnabled) return {};
 
-		this.learnedKeywords = this.ai.getCollection("_keyword_learnedKeywords", {
-			indices: ["userId"],
+		this.learnedKeywords = this.ai.getCollection('_keyword_learnedKeywords', {
+			indices: ['userId'],
 		});
 
 		setInterval(this.learn, 1000 * 60 * 30);
@@ -35,7 +35,7 @@ export default class extends Module {
 
 	@bindThis
 	private async learn() {
-		const tl = await this.ai.api("notes/hybrid-timeline", {
+		const tl = await this.ai.api('notes/hybrid-timeline', {
 			limit: 30,
 		});
 
@@ -44,7 +44,7 @@ export default class extends Module {
 				note.userId !== this.ai.account.id &&
 				note.text != null &&
 				note.cw == null &&
-				(note.visibility === "public" || note.visibility === "home"),
+				(note.visibility === 'public' || note.visibility === 'home')
 		);
 
 		let keywords: string[][] = [];
@@ -52,7 +52,7 @@ export default class extends Module {
 		for (const note of interestedNotes) {
 			const tokens = await mecab(note.text, config.mecab, config.mecabDic);
 			const keywordsInThisNote = tokens.filter(
-				(token) => token[2] == "固有名詞" && token[8] != null,
+				(token) => token[2] == '固有名詞' && token[8] != null
 			);
 			keywords = keywords.concat(keywordsInThisNote);
 		}
@@ -61,7 +61,7 @@ export default class extends Module {
 
 		const rnd = Math.floor((1 - Math.sqrt(Math.random())) * keywords.length);
 		const keyword = keywords.sort((a, b) =>
-			a[0].length < b[0].length ? 1 : -1,
+			a[0].length < b[0].length ? 1 : -1
 		)[rnd];
 
 		const exist = this.learnedKeywords.findOne({

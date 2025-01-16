@@ -1,13 +1,13 @@
-import { bindThis } from "@/decorators.js";
-import Module from "@/module.js";
-import serifs from "@/serifs.js";
-import Message from "@/message.js";
-import { renderChart } from "./render-chart.js";
-import { items } from "@/vocabulary.js";
-import config from "@/config.js";
+import { bindThis } from '@/decorators.js';
+import Module from '@/module.js';
+import serifs from '@/serifs.js';
+import Message from '@/message.js';
+import { renderChart } from './render-chart.js';
+import { items } from '@/vocabulary.js';
+import config from '@/config.js';
 
 export default class extends Module {
-	public readonly name = "chart";
+	public readonly name = 'chart';
 
 	@bindThis
 	public install() {
@@ -31,10 +31,10 @@ export default class extends Module {
 		data.lastPosted = date;
 		this.setData(data);
 
-		this.log("Time to chart");
-		const file = await this.genChart("notes");
+		this.log('Time to chart');
+		const file = await this.genChart('notes');
 
-		this.log("Posting...");
+		this.log('Posting...');
 		this.ai.post({
 			text: serifs.chart.post,
 			fileIds: [file.id],
@@ -43,13 +43,13 @@ export default class extends Module {
 
 	@bindThis
 	private async genChart(type, params?): Promise<any> {
-		this.log("Chart data fetching...");
+		this.log('Chart data fetching...');
 
 		let chart;
 
-		if (type === "userNotes") {
-			const data = await this.ai.api("charts/user/notes", {
-				span: "day",
+		if (type === 'userNotes') {
+			const data = await this.ai.api('charts/user/notes', {
+				span: 'day',
 				limit: 30,
 				userId: params.user.id,
 			});
@@ -68,9 +68,9 @@ export default class extends Module {
 					},
 				],
 			};
-		} else if (type === "followers") {
-			const data = await this.ai.api("charts/user/following", {
-				span: "day",
+		} else if (type === 'followers') {
+			const data = await this.ai.api('charts/user/following', {
+				span: 'day',
 				limit: 30,
 				userId: params.user.id,
 			});
@@ -86,9 +86,9 @@ export default class extends Module {
 					},
 				],
 			};
-		} else if (type === "notes") {
-			const data = await this.ai.api("charts/notes", {
-				span: "day",
+		} else if (type === 'notes') {
+			const data = await this.ai.api('charts/notes', {
+				span: 'day',
 				limit: 30,
 			});
 
@@ -106,7 +106,7 @@ export default class extends Module {
 				],
 			};
 		} else {
-			const suffixes = ["の売り上げ", "の消費", "の生産"];
+			const suffixes = ['の売り上げ', 'の消費', 'の生産'];
 
 			const limit = 30;
 			const diffRange = 150;
@@ -135,13 +135,13 @@ export default class extends Module {
 			};
 		}
 
-		this.log("Chart rendering...");
+		this.log('Chart rendering...');
 		const img = renderChart(chart);
 
-		this.log("Image uploading...");
+		this.log('Image uploading...');
 		const file = await this.ai.upload(img, {
-			filename: "chart.png",
-			contentType: "image/png",
+			filename: 'chart.png',
+			contentType: 'image/png',
 		});
 
 		return file;
@@ -149,25 +149,25 @@ export default class extends Module {
 
 	@bindThis
 	private async mentionHook(msg: Message) {
-		if (!msg.includes(["チャート"])) {
+		if (!msg.includes(['チャート'])) {
 			return false;
 		} else {
-			this.log("Chart requested");
+			this.log('Chart requested');
 		}
 
-		let type = "random";
-		if (msg.includes(["フォロワー"])) type = "followers";
-		if (msg.includes(["投稿"])) type = "userNotes";
+		let type = 'random';
+		if (msg.includes(['フォロワー'])) type = 'followers';
+		if (msg.includes(['投稿'])) type = 'userNotes';
 
 		const file = await this.genChart(type, {
 			user: msg.user,
 		});
 
-		this.log("Replying...");
+		this.log('Replying...');
 		msg.reply(serifs.chart.foryou, { file });
 
 		return {
-			reaction: "like",
+			reaction: 'like',
 		};
 	}
 }

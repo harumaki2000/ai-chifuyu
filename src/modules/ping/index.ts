@@ -1,9 +1,9 @@
-import { bindThis } from "@/decorators.js";
-import Module from "@/module.js";
-import Message from "@/message.js";
+import { bindThis } from '@/decorators.js';
+import Module from '@/module.js';
+import Message from '@/message.js';
 
 export default class extends Module {
-	public readonly name = "ping";
+	public readonly name = 'ping';
 
 	@bindThis
 	public install() {
@@ -14,8 +14,8 @@ export default class extends Module {
 
 	@bindThis
 	private async mentionHook(msg: Message) {
-		if (msg.text && msg.text.includes("ping")) {
-			msg.reply("PONG!", {
+		if (msg.text && msg.text.includes('ping')) {
+			msg.reply('PONG!', {
 				immediate: true,
 			});
 			return true;

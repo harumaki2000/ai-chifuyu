@@ -1,11 +1,11 @@
-import { bindThis } from "@/decorators.js";
-import { EventEmitter } from "events";
-import WebSocket from "ws";
-import _ReconnectingWebsocket from "reconnecting-websocket";
-import config from "./config.js";
+import { bindThis } from '@/decorators.js';
+import { EventEmitter } from 'events';
+import WebSocket from 'ws';
+import _ReconnectingWebsocket from 'reconnecting-websocket';
+import config from './config.js';
 
 const ReconnectingWebsocket =
-	_ReconnectingWebsocket as unknown as (typeof _ReconnectingWebsocket)["default"];
+	_ReconnectingWebsocket as unknown as (typeof _ReconnectingWebsocket)['default'];
 
 /**
  * Misskey stream connection
@@ -21,7 +21,7 @@ export default class Stream extends EventEmitter {
 	constructor() {
 		super();
 
-		this.state = "initializing";
+		this.state = 'initializing';
 		this.buffer = [];
 
 		this.stream = new ReconnectingWebsocket(
@@ -29,11 +29,11 @@ export default class Stream extends EventEmitter {
 			[],
 			{
 				WebSocket: WebSocket,
-			},
+			}
 		);
-		this.stream.addEventListener("open", this.onOpen);
-		this.stream.addEventListener("close", this.onClose);
-		this.stream.addEventListener("message", this.onMessage);
+		this.stream.addEventListener('open', this.onOpen);
+		this.stream.addEventListener('close', this.onClose);
+		this.stream.addEventListener('message', this.onMessage);
 	}
 
 	@bindThis
@@ -53,7 +53,7 @@ export default class Stream extends EventEmitter {
 	@bindThis
 	public removeSharedConnection(connection: SharedConnection) {
 		this.sharedConnections = this.sharedConnections.filter(
-			(c) => c !== connection,
+			(c) => c !== connection
 		);
 	}
 
@@ -67,7 +67,7 @@ export default class Stream extends EventEmitter {
 	@bindThis
 	public disconnectToChannel(connection: NonSharedConnection) {
 		this.nonSharedConnections = this.nonSharedConnections.filter(
-			(c) => c !== connection,
+			(c) => c !== connection
 		);
 	}
 
@@ -76,10 +76,10 @@ export default class Stream extends EventEmitter {
 	 */
 	@bindThis
 	private onOpen() {
-		const isReconnect = this.state == "reconnecting";
+		const isReconnect = this.state == 'reconnecting';
 
-		this.state = "connected";
-		this.emit("_connected_");
+		this.state = 'connected';
+		this.emit('_connected_');
 
 		// バッファーを処理
 		const _buffer = [...this.buffer]; // Shallow copy
@@ -104,8 +104,8 @@ export default class Stream extends EventEmitter {
 	 */
 	@bindThis
 	private onClose() {
-		this.state = "reconnecting";
-		this.emit("_disconnected_");
+		this.state = 'reconnecting';
+		this.emit('_disconnected_');
 	}
 
 	/**
@@ -115,7 +115,7 @@ export default class Stream extends EventEmitter {
 	private onMessage(message) {
 		const { type, body } = JSON.parse(message.data);
 
-		if (type == "channel") {
+		if (type == 'channel') {
 			const id = body.id;
 
 			let connections: (Connection | undefined)[];
@@ -128,11 +128,11 @@ export default class Stream extends EventEmitter {
 
 			for (const c of connections.filter((c) => c != null)) {
 				c!.emit(body.type, body.body);
-				c!.emit("*", { type: body.type, body: body.body });
+				c!.emit('*', { type: body.type, body: body.body });
 			}
 		} else {
 			this.emit(type, body);
-			this.emit("*", { type, body });
+			this.emit('*', { type, body });
 		}
 	}
 
@@ -150,7 +150,7 @@ export default class Stream extends EventEmitter {
 					};
 
 		// まだ接続が確立されていなかったらバッファリングして次に接続した時に送信する
-		if (this.state != "connected") {
+		if (this.state != 'connected') {
 			this.buffer.push(data);
 			return;
 		}
@@ -168,8 +168,8 @@ export default class Stream extends EventEmitter {
 	 */
 	@bindThis
 	public close() {
-		this.stream.removeEventListener("open", this.onOpen);
-		this.stream.removeEventListener("message", this.onMessage);
+		this.stream.removeEventListener('open', this.onOpen);
+		this.stream.removeEventListener('message', this.onMessage);
 	}
 }
 
@@ -220,7 +220,7 @@ class Pool {
 	@bindThis
 	public connect() {
 		this.isConnected = true;
-		this.stream.send("connect", {
+		this.stream.send('connect', {
 			channel: this.channel,
 			id: this.id,
 		});
@@ -230,7 +230,7 @@ class Pool {
 	private disconnect() {
 		this.isConnected = false;
 		this.disposeTimerId = null;
-		this.stream.send("disconnect", { id: this.id });
+		this.stream.send('disconnect', { id: this.id });
 	}
 }
 
@@ -251,7 +251,7 @@ abstract class Connection extends EventEmitter {
 		const type = payload === undefined ? typeOrPayload.type : typeOrPayload;
 		const body = payload === undefined ? typeOrPayload.body : payload;
 
-		this.stream.send("ch", {
+		this.stream.send('ch', {
 			id: id,
 			type: type,
 			body: body,
@@ -303,7 +303,7 @@ class NonSharedConnection extends Connection {
 
 	@bindThis
 	public connect() {
-		this.stream.send("connect", {
+		this.stream.send('connect', {
 			channel: this.channel,
 			id: this.id,
 			params: this.params,
@@ -318,7 +318,7 @@ class NonSharedConnection extends Connection {
 	@bindThis
 	public dispose() {
 		this.removeAllListeners();
-		this.stream.send("disconnect", { id: this.id });
+		this.stream.send('disconnect', { id: this.id });
 		this.stream.disconnectToChannel(this);
 	}
 }

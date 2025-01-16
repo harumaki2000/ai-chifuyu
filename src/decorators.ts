@@ -8,20 +8,19 @@
 export function bindThis(target: any, key: string, descriptor: any) {
 	let fn = descriptor.value;
 
-	if (typeof fn !== "function") {
+	if (typeof fn !== 'function') {
 		throw new TypeError(
-			`@bindThis decorator can only be applied to methods not: ${typeof fn}`,
+			`@bindThis decorator can only be applied to methods not: ${typeof fn}`
 		);
 	}
 
 	return {
 		configurable: true,
 		get() {
-			 
 			if (
 				this === target.prototype ||
 				this.hasOwnProperty(key) ||
-				typeof fn !== "function"
+				typeof fn !== 'function'
 			) {
 				return fn;
 			}

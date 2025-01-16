@@ -1,10 +1,10 @@
-import { bindThis } from "@/decorators.js";
-import Module from "@/module.js";
-import Message from "@/message.js";
-import serifs from "@/serifs.js";
+import { bindThis } from '@/decorators.js';
+import Module from '@/module.js';
+import Message from '@/message.js';
+import serifs from '@/serifs.js';
 
 export default class extends Module {
-	public readonly name = "dice";
+	public readonly name = 'dice';
 
 	@bindThis
 	public install() {
@@ -33,7 +33,7 @@ export default class extends Module {
 			results.push(Math.floor(Math.random() * dice) + 1);
 		}
 
-		msg.reply(serifs.dice.done(results.join(" ")));
+		msg.reply(serifs.dice.done(results.join(' ')));
 
 		return true;
 	}
