@@ -436,7 +436,7 @@ export default {
 			`あぅ... ${type}の${type}のAPIキーが登録されてないみたいです`,
 		error: (type) => (type) =>
 			`うぇ...${type}で${type}でエラーが発生しちゃったみたいです。gemini-flashだと動くかも？gemini-flashだと動くかも？`,
-		post: (text, type) => `${text} (${type}) #aichat`,
+		post: (text) => `${text} #aichat`,
 	},
 
 	sleepReport: {
