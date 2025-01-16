@@ -1,49 +1,49 @@
 // AiOS bootstrapper
 
-import process from "node:process";
-import chalk from "chalk";
-import got from "got";
-import promiseRetry from "promise-retry";
+import process from 'node:process';
+import chalk from 'chalk';
+import got from 'got';
+import promiseRetry from 'promise-retry';
 
-import 藍 from "./ai.js";
-import config from "./config.js";
-import _log from "./utils/log.js";
+import 藍 from './ai.js';
+import config from './config.js';
+import _log from './utils/log.js';
 // import pkg from '../package.json' assert { type: 'json' };
-import { createRequire } from "module";
+import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const pkg = require("../package.json");
+const pkg = require('../package.json');
 
-import CoreModule from "./modules/core/index.js";
-import TalkModule from "./modules/talk/index.js";
-import BirthdayModule from "./modules/birthday/index.js";
-import ReversiModule from "./modules/reversi/index.js";
-import PingModule from "./modules/ping/index.js";
-import EmojiModule from "./modules/emoji/index.js";
-import EmojiReactModule from "./modules/emoji-react/index.js";
-import FortuneModule from "./modules/fortune/index.js";
-import GuessingGameModule from "./modules/guessing-game/index.js";
-import KazutoriModule from "./modules/kazutori/index.js";
-import KeywordModule from "./modules/keyword/index.js";
-import WelcomeModule from "./modules/welcome/index.js";
-import TimerModule from "./modules/timer/index.js";
-import DiceModule from "./modules/dice/index.js";
-import ServerModule from "./modules/server/index.js";
-import FollowModule from "./modules/follow/index.js";
-import ValentineModule from "./modules/valentine/index.js";
+import CoreModule from './modules/core/index.js';
+import TalkModule from './modules/talk/index.js';
+import BirthdayModule from './modules/birthday/index.js';
+import ReversiModule from './modules/reversi/index.js';
+import PingModule from './modules/ping/index.js';
+import EmojiModule from './modules/emoji/index.js';
+import EmojiReactModule from './modules/emoji-react/index.js';
+import FortuneModule from './modules/fortune/index.js';
+import GuessingGameModule from './modules/guessing-game/index.js';
+import KazutoriModule from './modules/kazutori/index.js';
+import KeywordModule from './modules/keyword/index.js';
+import WelcomeModule from './modules/welcome/index.js';
+import TimerModule from './modules/timer/index.js';
+import DiceModule from './modules/dice/index.js';
+import ServerModule from './modules/server/index.js';
+import FollowModule from './modules/follow/index.js';
+import ValentineModule from './modules/valentine/index.js';
 import MazeModule from './modules/maze/index.js';
-import ChartModule from "./modules/chart/index.js";
-import SleepReportModule from "./modules/sleep-report/index.js";
-import NotingModule from "./modules/noting/index.js";
+import ChartModule from './modules/chart/index.js';
+import SleepReportModule from './modules/sleep-report/index.js';
+import NotingModule from './modules/noting/index.js';
 import PollModule from './modules/poll/index.js';
-import ReminderModule from "./modules/reminder/index.js";
-import CheckCustomEmojisModule from "./modules/check-custom-emojis/index.js";
-import EarthQuakeWarningModule from "./modules/earthquake_warning/index.js";
-import AiChatModule from "./modules/aichat/index.js";
+import ReminderModule from './modules/reminder/index.js';
+import CheckCustomEmojisModule from './modules/check-custom-emojis/index.js';
+import EarthQuakeWarningModule from './modules/earthquake_warning/index.js';
+import AiChatModule from './modules/aichat/index.js';
 
-console.log("   __    ____  _____  ___ ");
-console.log("  /__\\  (_  _)(  _  )/ __)");
-console.log(" /(__)\\  _)(_  )(_)( \\__ \\");
-console.log("(__)(__)(____)(_____)(___/\n");
+console.log('   __    ____  _____  ___ ');
+console.log('  /__\\  (_  _)(  _  )/ __)');
+console.log(' /(__)\\  _)(_  )(_)( \\__ \\');
+console.log('(__)(__)(____)(_____)(___/\n');
 
 function log(msg: string): void {
 	_log(`[Boot]: ${msg}`);
@@ -51,7 +51,7 @@ function log(msg: string): void {
 
 log(chalk.bold(`Ai v${pkg._v}`));
 
-process.on("uncaughtException", (err) => {
+process.on('uncaughtException', (err) => {
 	try {
 		console.error(`Uncaught exception: ${err.message}`);
 		console.dir(err, { colors: true, depth: 2 });
@@ -74,14 +74,14 @@ promiseRetry(
 	},
 	{
 		retries: 3,
-	},
+	}
 )
 	.then((account) => {
 		// @ts-ignore
 		const acct = `@${account.username}`;
 		log(chalk.green(`Account fetched successfully: ${chalk.underline(acct)}`));
 
-		log("Starting AiOS...");
+		log('Starting AiOS...');
 
 		// 藍起動
 		// @ts-ignore
@@ -115,5 +115,5 @@ promiseRetry(
 		]);
 	})
 	.catch((e) => {
-		log(chalk.red("Failed to fetch the account"));
+		log(chalk.red('Failed to fetch the account'));
 	});

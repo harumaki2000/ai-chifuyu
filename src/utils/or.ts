@@ -1,11 +1,11 @@
-import { hankakuToZenkaku, katakanaToHiragana } from "./japanese.js";
+import { hankakuToZenkaku, katakanaToHiragana } from './japanese.js';
 
 export default function (text: string, words: (string | RegExp)[]): boolean {
 	if (text == null) return false;
 
 	text = katakanaToHiragana(hankakuToZenkaku(text));
 	words = words.map((word) =>
-		typeof word == "string" ? katakanaToHiragana(word) : word,
+		typeof word == 'string' ? katakanaToHiragana(word) : word
 	);
 
 	return words.some((word) => {
@@ -16,14 +16,14 @@ export default function (text: string, words: (string | RegExp)[]): boolean {
 		function denoise(text: string): string {
 			text = text.trim();
 
-			if (text.startsWith("@")) {
-				text = text.replace(/^@[a-zA-Z0-1\-_]+/, "");
+			if (text.startsWith('@')) {
+				text = text.replace(/^@[a-zA-Z0-1\-_]+/, '');
 				text = text.trim();
 			}
 
 			function fn() {
-				text = text.replace(/[！!]+$/, "");
-				text = text.replace(/っ+$/, "");
+				text = text.replace(/[！!]+$/, '');
+				text = text.replace(/っ+$/, '');
 
 				// 末尾の ー を除去
 				// 例えば「おはよー」を「おはよ」にする
@@ -31,18 +31,21 @@ export default function (text: string, words: (string | RegExp)[]): boolean {
 				// 「セーラ」になり、「セーラー」を期待している場合はマッチしなくなり期待する動作にならなくなるので、
 				// 期待するワードの末尾にもともと「ー」が含まれている場合は(対象のテキストの「ー」をすべて除去した後に)「ー」を付けてあげる
 				text =
-					text.replace(/ー+$/, "") +
-					(typeof word == "string" && word[word.length - 1] == "ー"
-						? "ー"
-						: "");
+					text.replace(/ー+$/, '') +
+					(typeof word == 'string' && word[word.length - 1] == 'ー'
+						? 'ー'
+						: '');
 
-				text = text.replace(/。$/, "");
-				text = text.replace(/です$/, "");
-				text = text.replace(/(\.|…)+$/, "");
-				text = text.replace(/[♪♥]+$/, "");
-				text = text.replace(/^花隈/, "") || text.replace(/^千冬/, "") || text.replace(/^花隈千冬/, "");
-				text = text.replace(/^ちゃん/, "");
-				text = text.replace(/、+$/, "");
+				text = text.replace(/。$/, '');
+				text = text.replace(/です$/, '');
+				text = text.replace(/(\.|…)+$/, '');
+				text = text.replace(/[♪♥]+$/, '');
+				text =
+					text.replace(/^花隈/, '') ||
+					text.replace(/^千冬/, '') ||
+					text.replace(/^花隈千冬/, '');
+				text = text.replace(/^ちゃん/, '');
+				text = text.replace(/、+$/, '');
 			}
 
 			let textBefore = text;
@@ -57,7 +60,7 @@ export default function (text: string, words: (string | RegExp)[]): boolean {
 			return text;
 		}
 
-		if (typeof word == "string") {
+		if (typeof word == 'string') {
 			return text == word || denoise(text) == word;
 		} else {
 			return word.test(text) || word.test(denoise(text));

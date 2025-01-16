@@ -1,11 +1,11 @@
-import { bindThis } from "@/decorators.js";
-import loki from "lokijs";
-import Module from "@/module.js";
-import Message from "@/message.js";
-import serifs from "@/serifs.js";
+import { bindThis } from '@/decorators.js';
+import loki from 'lokijs';
+import Module from '@/module.js';
+import Message from '@/message.js';
+import serifs from '@/serifs.js';
 
 export default class extends Module {
-	public readonly name = "guessingGame";
+	public readonly name = 'guessingGame';
 
 	private guesses: loki.Collection<{
 		userId: string;
@@ -18,8 +18,8 @@ export default class extends Module {
 
 	@bindThis
 	public install() {
-		this.guesses = this.ai.getCollection("guessingGame", {
-			indices: ["userId"],
+		this.guesses = this.ai.getCollection('guessingGame', {
+			indices: ['userId'],
 		});
 
 		return {
@@ -30,7 +30,7 @@ export default class extends Module {
 
 	@bindThis
 	private async mentionHook(msg: Message) {
-		if (!msg.includes(["数当て", "数あて"])) return false;
+		if (!msg.includes(['数当て', '数あて'])) return false;
 
 		const exist = this.guesses.findOne({
 			userId: msg.userId,
@@ -70,7 +70,7 @@ export default class extends Module {
 			return;
 		}
 
-		if (msg.text.includes("やめ")) {
+		if (msg.text.includes('やめ')) {
 			msg.reply(serifs.guessingGame.cancel);
 			exist.isEnded = true;
 			exist.endedAt = Date.now();

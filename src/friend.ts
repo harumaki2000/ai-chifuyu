@@ -1,9 +1,9 @@
-import { bindThis } from "@/decorators.js";
-import 藍 from "@/ai.js";
-import IModule from "@/module.js";
-import getDate from "@/utils/get-date.js";
-import type { User } from "@/misskey/user.js";
-import { genItem } from "@/vocabulary.js";
+import { bindThis } from '@/decorators.js';
+import 藍 from '@/ai.js';
+import IModule from '@/module.js';
+import getDate from '@/utils/get-date.js';
+import type { User } from '@/misskey/user.js';
+import { genItem } from '@/vocabulary.js';
 
 export type FriendDoc = {
 	userId: string;
@@ -54,7 +54,7 @@ export default class Friend {
 				});
 
 				if (inserted == null) {
-					throw new Error("Failed to insert friend doc");
+					throw new Error('Failed to insert friend doc');
 				}
 
 				this.doc = inserted;
@@ -66,7 +66,7 @@ export default class Friend {
 		} else if (opts.doc) {
 			this.doc = opts.doc;
 		} else {
-			throw new Error("No friend info specified");
+			throw new Error('No friend info specified');
 		}
 	}
 

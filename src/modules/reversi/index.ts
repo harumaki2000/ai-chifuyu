@@ -1,19 +1,19 @@
-import * as childProcess from "child_process";
-import { bindThis } from "@/decorators.js";
-import Module from "@/module.js";
-import serifs from "@/serifs.js";
-import config from "@/config.js";
-import Message from "@/message.js";
-import Friend from "@/friend.js";
-import getDate from "@/utils/get-date.js";
-import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
+import * as childProcess from 'child_process';
+import { bindThis } from '@/decorators.js';
+import Module from '@/module.js';
+import serifs from '@/serifs.js';
+import config from '@/config.js';
+import Message from '@/message.js';
+import Friend from '@/friend.js';
+import getDate from '@/utils/get-date.js';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 
 const _filename = fileURLToPath(import.meta.url);
 const _dirname = dirname(_filename);
 
 export default class extends Module {
-	public readonly name = "reversi";
+	public readonly name = 'reversi';
 
 	/**
 	 * リバーシストリーム
@@ -24,23 +24,23 @@ export default class extends Module {
 	public install() {
 		if (!config.reversiEnabled) return {};
 
-		this.reversiConnection = this.ai.connection.useSharedConnection("reversi");
+		this.reversiConnection = this.ai.connection.useSharedConnection('reversi');
 
 		// 招待されたとき
-		this.reversiConnection.on("invited", (msg) =>
-			this.onReversiInviteMe(msg.user),
+		this.reversiConnection.on('invited', (msg) =>
+			this.onReversiInviteMe(msg.user)
 		);
 
 		// マッチしたとき
-		this.reversiConnection.on("matched", (msg) =>
-			this.onReversiGameStart(msg.game),
+		this.reversiConnection.on('matched', (msg) =>
+			this.onReversiGameStart(msg.game)
 		);
 
 		if (config.reversiEnabled) {
-			const mainStream = this.ai.connection.useSharedConnection("main");
-			mainStream.on("pageEvent", (msg) => {
-				if (msg.event === "inviteReversi") {
-					this.ai.api("games/reversi/match", {
+			const mainStream = this.ai.connection.useSharedConnection('main');
+			mainStream.on('pageEvent', (msg) => {
+				if (msg.event === 'inviteReversi') {
+					this.ai.api('games/reversi/match', {
 						userId: msg.user.id,
 					});
 				}
@@ -54,15 +54,15 @@ export default class extends Module {
 
 	@bindThis
 	private async mentionHook(msg: Message) {
-		if (msg.includes(["リバーシ", "オセロ", "reversi", "othello"])) {
+		if (msg.includes(['リバーシ', 'オセロ', 'reversi', 'othello'])) {
 			if (config.reversiEnabled) {
 				msg.reply(serifs.reversi.ok);
 
-				if (msg.includes(["接待"])) {
+				if (msg.includes(['接待'])) {
 					msg.friend.updateReversiStrength(0);
 				}
 
-				this.ai.api("reversi/match", {
+				this.ai.api('reversi/match', {
 					userId: msg.userId,
 				});
 			} else {
@@ -81,7 +81,7 @@ export default class extends Module {
 
 		if (config.reversiEnabled) {
 			// 承認
-			const game = await this.ai.api("reversi/match", {
+			const game = await this.ai.api('reversi/match', {
 				userId: inviter.id,
 			});
 
@@ -95,7 +95,7 @@ export default class extends Module {
 	private onReversiGameStart(game: any) {
 		let strength = 4;
 		const friend = this.ai.lookupFriend(
-			game.user1Id !== this.ai.account.id ? game.user1Id : game.user2Id,
+			game.user1Id !== this.ai.account.id ? game.user1Id : game.user2Id
 		)!;
 		if (friend != null) {
 			strength = friend.doc.reversiStrength ?? 4;
@@ -105,42 +105,42 @@ export default class extends Module {
 		this.log(`enter reversi game room: ${game.id}`);
 
 		// ゲームストリームに接続
-		const gw = this.ai.connection.connectToChannel("reversiGame", {
+		const gw = this.ai.connection.connectToChannel('reversiGame', {
 			gameId: game.id,
 		});
 
 		// フォーム
 		const form = [
 			{
-				id: "publish",
-				type: "switch",
-				label: "藍が対局情報を投稿するのを許可",
+				id: 'publish',
+				type: 'switch',
+				label: '藍が対局情報を投稿するのを許可',
 				value: true,
 			},
 			{
-				id: "strength",
-				type: "radio",
-				label: "強さ",
+				id: 'strength',
+				type: 'radio',
+				label: '強さ',
 				value: strength,
 				items: [
 					{
-						label: "接待",
+						label: '接待',
 						value: 0,
 					},
 					{
-						label: "弱",
+						label: '弱',
 						value: 2,
 					},
 					{
-						label: "中",
+						label: '中',
 						value: 3,
 					},
 					{
-						label: "強",
+						label: '強',
 						value: 4,
 					},
 					{
-						label: "最強",
+						label: '最強',
 						value: 5,
 					},
 				],
@@ -148,11 +148,11 @@ export default class extends Module {
 		];
 
 		//#region バックエンドプロセス開始
-		const ai = childProcess.fork(_dirname + "/back.js");
+		const ai = childProcess.fork(_dirname + '/back.js');
 
 		// バックエンドプロセスに情報を渡す
 		ai.send({
-			type: "_init_",
+			type: '_init_',
 			body: {
 				game: game,
 				form: form,
@@ -160,13 +160,13 @@ export default class extends Module {
 			},
 		});
 
-		ai.on("message", (msg: Record<string, any>) => {
-			if (msg.type == "putStone") {
-				gw.send("putStone", {
+		ai.on('message', (msg: Record<string, any>) => {
+			if (msg.type == 'putStone') {
+				gw.send('putStone', {
 					pos: msg.pos,
 					id: msg.id,
 				});
-			} else if (msg.type == "ended") {
+			} else if (msg.type == 'ended') {
 				gw.dispose();
 
 				this.onGameEnded(game);
@@ -174,15 +174,15 @@ export default class extends Module {
 		});
 
 		// ゲームストリームから情報が流れてきたらそのままバックエンドプロセスに伝える
-		gw.addListener("*", (message) => {
+		gw.addListener('*', (message) => {
 			ai.send(message);
 
-			if (message.type === "updateSettings") {
-				if (message.body.key === "canPutEverywhere") {
+			if (message.type === 'updateSettings') {
+				if (message.body.key === 'canPutEverywhere') {
 					if (message.body.value === true) {
-						gw.send("ready", false);
+						gw.send('ready', false);
 					} else {
-						gw.send("ready", true);
+						gw.send('ready', true);
 					}
 				}
 			}
@@ -191,7 +191,7 @@ export default class extends Module {
 
 		// どんな設定内容の対局でも受け入れる
 		setTimeout(() => {
-			gw.send("ready", true);
+			gw.send('ready', true);
 		}, 1000);
 	}
 

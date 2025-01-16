@@ -1,10 +1,10 @@
-import { bindThis } from "@/decorators.js";
-import Module from "@/module.js";
-import serifs from "@/serifs.js";
-import config from "@/config.js";
+import { bindThis } from '@/decorators.js';
+import Module from '@/module.js';
+import serifs from '@/serifs.js';
+import config from '@/config.js';
 
 export default class extends Module {
-	public readonly name = "server";
+	public readonly name = 'server';
 
 	private connection?: any;
 	private recentStat: any;
@@ -20,8 +20,8 @@ export default class extends Module {
 	public install() {
 		if (!config.serverMonitoring) return {};
 
-		this.connection = this.ai.connection.useSharedConnection("serverStats");
-		this.connection.on("stats", this.onStats);
+		this.connection = this.ai.connection.useSharedConnection('serverStats');
+		this.connection.on('stats', this.onStats);
 
 		setInterval(() => {
 			this.statsLogs.unshift(this.recentStat);
@@ -40,7 +40,7 @@ export default class extends Module {
 		const average = (arr) => arr.reduce((a, b) => a + b) / arr.length;
 
 		const cpuPercentages = this.statsLogs.map(
-			(s) => (s && (s.cpu_usage || s.cpu) * 100) || 0,
+			(s) => (s && (s.cpu_usage || s.cpu) * 100) || 0
 		);
 		const cpuPercentage = average(cpuPercentages);
 		if (cpuPercentage >= 70) {

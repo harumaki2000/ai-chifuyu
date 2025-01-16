@@ -1,10 +1,10 @@
-import { bindThis } from "@/decorators.js";
-import Module from "@/module.js";
-import Friend from "@/friend.js";
-import serifs from "@/serifs.js";
+import { bindThis } from '@/decorators.js';
+import Module from '@/module.js';
+import Friend from '@/friend.js';
+import serifs from '@/serifs.js';
 
 export default class extends Module {
-	public readonly name = "valentine";
+	public readonly name = 'valentine';
 
 	@bindThis
 	public install() {

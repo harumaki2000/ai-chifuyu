@@ -1,31 +1,31 @@
 // AI CORE
 
-import * as fs from "fs";
-import { bindThis } from "@/decorators.js";
-import loki from "lokijs";
-import got from "got";
-import { FormData, File } from "formdata-node";
-import chalk from "chalk";
-import { v4 as uuid } from "uuid";
+import * as fs from 'fs';
+import { bindThis } from '@/decorators.js';
+import loki from 'lokijs';
+import got from 'got';
+import { FormData, File } from 'formdata-node';
+import chalk from 'chalk';
+import { v4 as uuid } from 'uuid';
 
-import config from "@/config.js";
-import Module from "@/module.js";
-import Message from "@/message.js";
-import Friend, { FriendDoc } from "@/friend.js";
-import type { User } from "@/misskey/user.js";
-import Stream from "@/stream.js";
-import log from "@/utils/log.js";
-import { sleep } from "./utils/sleep.js";
+import config from '@/config.js';
+import Module from '@/module.js';
+import Message from '@/message.js';
+import Friend, { FriendDoc } from '@/friend.js';
+import type { User } from '@/misskey/user.js';
+import Stream from '@/stream.js';
+import log from '@/utils/log.js';
+import { sleep } from './utils/sleep.js';
 // import pkg from '../package.json' assert { type: 'json' };
-import { createRequire } from "module";
+import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const pkg = require("../package.json");
+const pkg = require('../package.json');
 
 type MentionHook = (msg: Message) => Promise<boolean | HandlerResult>;
 type ContextHook = (
 	key: any,
 	msg: Message,
-	data?: any,
+	data?: any
 ) => Promise<void | boolean | HandlerResult>;
 type TimeoutCallback = (data?: any) => void;
 
@@ -88,12 +88,12 @@ export default class 藍 {
 		this.account = account;
 		this.modules = modules;
 
-		let memoryDir = ".";
+		let memoryDir = '.';
 		if (config.memoryDir) {
 			memoryDir = config.memoryDir;
 		}
 		const file =
-			process.env.NODE_ENV === "test"
+			process.env.NODE_ENV === 'test'
 				? `${memoryDir}/test.memory.json`
 				: `${memoryDir}/memory.json`;
 
@@ -107,7 +107,7 @@ export default class 藍 {
 				if (err) {
 					this.log(chalk.red(`Failed to load the memory: ${err}`));
 				} else {
-					this.log(chalk.green("The memory loaded successfully"));
+					this.log(chalk.green('The memory loaded successfully'));
 					this.run();
 				}
 			},
@@ -116,28 +116,28 @@ export default class 藍 {
 
 	@bindThis
 	public log(msg: string) {
-		log(`[${chalk.magenta("AiOS")}]: ${msg}`);
+		log(`[${chalk.magenta('AiOS')}]: ${msg}`);
 	}
 
 	@bindThis
 	private run() {
 		//#region Init DB
-		this.meta = this.getCollection("meta", {});
+		this.meta = this.getCollection('meta', {});
 
-		this.contexts = this.getCollection("contexts", {
-			indices: ["key"],
+		this.contexts = this.getCollection('contexts', {
+			indices: ['key'],
 		});
 
-		this.timers = this.getCollection("timers", {
-			indices: ["module"],
+		this.timers = this.getCollection('timers', {
+			indices: ['module'],
 		});
 
-		this.friends = this.getCollection("friends", {
-			indices: ["userId"],
+		this.friends = this.getCollection('friends', {
+			indices: ['userId'],
 		});
 
-		this.moduleData = this.getCollection("moduleData", {
-			indices: ["module"],
+		this.moduleData = this.getCollection('moduleData', {
+			indices: ['module'],
 		});
 		//#endregion
 
@@ -151,50 +151,50 @@ export default class 藍 {
 		setInterval(this.connection.heartbeat, 1000 * 60);
 
 		//#region Main stream
-		const mainStream = this.connection.useSharedConnection("main");
+		const mainStream = this.connection.useSharedConnection('main');
 
 		// メンションされたとき
-		mainStream.on("mention", async (data) => {
+		mainStream.on('mention', async (data) => {
 			if (data.userId == this.account.id) return; // 自分は弾く
-			if (data.text && data.text.startsWith("@" + this.account.username)) {
+			if (data.text && data.text.startsWith('@' + this.account.username)) {
 				// Misskeyのバグで投稿が非公開扱いになる
 				if (data.text == null)
-					data = await this.api("notes/show", { noteId: data.id });
+					data = await this.api('notes/show', { noteId: data.id });
 				this.onReceiveMessage(new Message(this, data));
 			}
 		});
 
 		// 返信されたとき
-		mainStream.on("reply", async (data) => {
+		mainStream.on('reply', async (data) => {
 			if (data.userId == this.account.id) return; // 自分は弾く
-			if (data.text && data.text.startsWith("@" + this.account.username))
+			if (data.text && data.text.startsWith('@' + this.account.username))
 				return;
 			// Misskeyのバグで投稿が非公開扱いになる
 			if (data.text == null)
-				data = await this.api("notes/show", { noteId: data.id });
+				data = await this.api('notes/show', { noteId: data.id });
 			this.onReceiveMessage(new Message(this, data));
 		});
 
 		// Renoteされたとき
-		mainStream.on("renote", async (data) => {
+		mainStream.on('renote', async (data) => {
 			if (data.userId == this.account.id) return; // 自分は弾く
 			if (data.text == null && (data.files || []).length == 0) return;
 
 			// リアクションする
-			this.api("notes/reactions/create", {
+			this.api('notes/reactions/create', {
 				noteId: data.id,
-				reaction: "love",
+				reaction: 'love',
 			});
 		});
 
 		// メッセージ
-		mainStream.on("messagingMessage", (data) => {
+		mainStream.on('messagingMessage', (data) => {
 			if (data.userId == this.account.id) return; // 自分は弾く
 			this.onReceiveMessage(new Message(this, data));
 		});
 
 		// 通知
-		mainStream.on("notification", (data) => {
+		mainStream.on('notification', (data) => {
 			this.onNotification(data);
 		});
 		//#endregion
@@ -218,7 +218,7 @@ export default class 藍 {
 
 		setInterval(this.logWaking, 10000);
 
-		this.log(chalk.green.bold("Ai am now running!"));
+		this.log(chalk.green.bold('Ai am now running!'));
 	}
 
 	/**
@@ -244,7 +244,7 @@ export default class 藍 {
 					noteId: msg.replyId,
 				});
 
-		let reaction: string | null = "love";
+		let reaction: string | null = 'love';
 		let immediate: boolean = false;
 
 		//#region
@@ -253,10 +253,10 @@ export default class 藍 {
 
 			for (const handler of this.mentionHooks) {
 				res = await handler(msg);
-				if (res === true || typeof res === "object") break;
+				if (res === true || typeof res === 'object') break;
 			}
 
-			if (res != null && typeof res === "object") {
+			if (res != null && typeof res === 'object') {
 				if (res.reaction != null) reaction = res.reaction;
 				if (res.immediate != null) immediate = res.immediate;
 			}
@@ -268,7 +268,7 @@ export default class 藍 {
 			const handler = this.contextHooks[context.module];
 			const res = await handler(context.key, msg, context.data);
 
-			if (res != null && typeof res === "object") {
+			if (res != null && typeof res === 'object') {
 				if (res.reaction != null) reaction = res.reaction;
 				if (res.immediate != null) immediate = res.immediate;
 			}
@@ -287,7 +287,7 @@ export default class 藍 {
 
 		// リアクションする
 		if (reaction) {
-			this.api("notes/reactions/create", {
+			this.api('notes/reactions/create', {
 				noteId: msg.id,
 				reaction: reaction,
 			});
@@ -299,7 +299,7 @@ export default class 藍 {
 		switch (notification.type) {
 			// リアクションされたら親愛度を少し上げる
 			// TODO: リアクション取り消しをよしなにハンドリングする
-			case "reaction": {
+			case 'reaction': {
 				const friend = new Friend(this, { user: notification.user });
 				friend.incLove(0.1);
 				break;
@@ -347,7 +347,7 @@ export default class 藍 {
 	}
 
 	@bindThis
-	public lookupFriend(userId: User["id"]): Friend | null {
+	public lookupFriend(userId: User['id']): Friend | null {
 		const doc = this.friends.findOne({
 			userId: userId,
 		});
@@ -365,13 +365,13 @@ export default class 藍 {
 	@bindThis
 	public async upload(
 		file: Buffer | fs.ReadStream,
-		meta: { filename: string; contentType: string },
+		meta: { filename: string; contentType: string }
 	) {
 		const form = new FormData();
-		form.set("i", config.i);
+		form.set('i', config.i);
 		form.set(
-			"file",
-			new File([file], meta.filename, { type: meta.contentType }),
+			'file',
+			new File([file], meta.filename, { type: meta.contentType })
 		);
 
 		const res = await got
@@ -388,7 +388,7 @@ export default class 藍 {
 	 */
 	@bindThis
 	public async post(param: any) {
-		const res = await this.api("notes/create", param);
+		const res = await this.api('notes/create', param);
 		return res.createdNote;
 	}
 
@@ -400,11 +400,11 @@ export default class 藍 {
 		return this.post(
 			Object.assign(
 				{
-					visibility: "specified",
+					visibility: 'specified',
 					visibleUserIds: [userId],
 				},
-				param,
-			),
+				param
+			)
 		);
 	}
 
@@ -420,7 +420,7 @@ export default class 藍 {
 					{
 						i: config.i,
 					},
-					param,
+					param
 				),
 			})
 			.json();
@@ -438,7 +438,7 @@ export default class 藍 {
 		module: Module,
 		key: string | null,
 		id: string,
-		data?: any,
+		data?: any
 	) {
 		this.contexts.insertOne({
 			noteId: id,

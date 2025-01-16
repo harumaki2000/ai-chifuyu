@@ -1,5 +1,5 @@
-import { bindThis } from "@/decorators.js";
-import 藍, { InstallerResult } from "@/ai.js";
+import { bindThis } from '@/decorators.js';
+import 藍, { InstallerResult } from '@/ai.js';
 
 export default abstract class Module {
 	public abstract readonly name: string;

@@ -1,13 +1,13 @@
-import { bindThis } from "@/decorators.js";
-import chalk from "chalk";
+import { bindThis } from '@/decorators.js';
+import chalk from 'chalk';
 
-import 藍 from "@/ai.js";
-import Friend from "@/friend.js";
-import type { User } from "@/misskey/user.js";
-import includes from "@/utils/includes.js";
-import or from "@/utils/or.js";
-import config from "@/config.js";
-import { sleep } from "@/utils/sleep.js";
+import 藍 from '@/ai.js';
+import Friend from '@/friend.js';
+import type { User } from '@/misskey/user.js';
+import includes from '@/utils/includes.js';
+import or from '@/utils/or.js';
+import config from '@/config.js';
+import { sleep } from '@/utils/sleep.js';
 
 export default class Message {
 	private ai: 藍;
@@ -41,10 +41,10 @@ export default class Message {
 	 * メンション部分を除いたテキスト本文
 	 */
 	public get extractedText(): string {
-		const host = new URL(config.host).host.replace(/\./g, "\\.");
+		const host = new URL(config.host).host.replace(/\./g, '\\.');
 		return this.text
-			.replace(new RegExp(`^@${this.ai.account.username}@${host}\\s`, "i"), "")
-			.replace(new RegExp(`^@${this.ai.account.username}\\s`, "i"), "")
+			.replace(new RegExp(`^@${this.ai.account.username}@${host}\\s`, 'i'), '')
+			.replace(new RegExp(`^@${this.ai.account.username}\\s`, 'i'), '')
 			.trim();
 	}
 
@@ -62,7 +62,7 @@ export default class Message {
 
 		// メッセージなどに付いているユーザー情報は省略されている場合があるので完全なユーザー情報を持ってくる
 		this.ai
-			.api("users/show", {
+			.api('users/show', {
 				userId: this.userId,
 			})
 			.then((user) => {
@@ -78,7 +78,7 @@ export default class Message {
 			cw?: string;
 			renote?: string;
 			immediate?: boolean;
-		},
+		}
 	) {
 		if (text == null) return;
 

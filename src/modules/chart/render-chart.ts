@@ -1,4 +1,4 @@
-import { createCanvas, registerFont } from "canvas";
+import { createCanvas, registerFont } from 'canvas';
 
 const width = 1024 + 256;
 const height = 512 + 256;
@@ -9,10 +9,10 @@ const lineWidth = 16;
 const yAxisThickness = 2;
 
 const colors = {
-	bg: "#434343",
-	text: "#e0e4cc",
-	yAxis: "#5a5a5a",
-	dataset: ["#ff4e50", "#c2f725", "#69d2e7", "#f38630", "#f9d423"],
+	bg: '#434343',
+	text: '#e0e4cc',
+	yAxis: '#5a5a5a',
+	dataset: ['#ff4e50', '#c2f725', '#69d2e7', '#f38630', '#f9d423'],
 };
 
 const yAxisTicks = 4;
@@ -26,11 +26,11 @@ type Chart = {
 };
 
 export function renderChart(chart: Chart) {
-	registerFont("./font.ttf", { family: "CustomFont" });
+	registerFont('./font.ttf', { family: 'CustomFont' });
 
 	const canvas = createCanvas(width, height);
-	const ctx = canvas.getContext("2d");
-	ctx.antialias = "default";
+	const ctx = canvas.getContext('2d');
+	ctx.antialias = 'default';
 
 	ctx.fillStyle = colors.bg;
 	ctx.beginPath();
@@ -75,7 +75,7 @@ export function renderChart(chart: Chart) {
 
 	// Draw Y axis
 	ctx.lineWidth = yAxisThickness;
-	ctx.lineCap = "round";
+	ctx.lineCap = 'round';
 	ctx.strokeStyle = colors.yAxis;
 	for (let i = 0; i < yAxisSteps.length; i++) {
 		const step = yAxisSteps[yAxisSteps.length - i - 1];
@@ -85,7 +85,7 @@ export function renderChart(chart: Chart) {
 		ctx.lineTo(chartAreaX + chartAreaWidth, chartAreaY + y);
 		ctx.stroke();
 
-		ctx.font = "20px CustomFont";
+		ctx.font = '20px CustomFont';
 		ctx.fillStyle = colors.text;
 		ctx.fillText(step.toString(), chartAreaX, chartAreaY + y - 8);
 	}
@@ -101,7 +101,7 @@ export function renderChart(chart: Chart) {
 	for (let xAxis = 0; xAxis < xAxisCount; xAxis++) {
 		for (let series = 0; series < serieses; series++) {
 			newDatasets[series].data.push(
-				chart.datasets[series].data[xAxis] / yAxisRange,
+				chart.datasets[series].data[xAxis] / yAxisRange
 			);
 		}
 	}
@@ -120,7 +120,7 @@ export function renderChart(chart: Chart) {
 
 	// Draw X axis
 	ctx.lineWidth = lineWidth;
-	ctx.lineCap = "round";
+	ctx.lineCap = 'round';
 
 	for (let xAxis = 0; xAxis < xAxisCount; xAxis++) {
 		const xAxisPerTypeHeights: number[] = [];
@@ -169,7 +169,7 @@ export function renderChart(chart: Chart) {
 function niceScale(
 	lowerBound: number,
 	upperBound: number,
-	ticks: number,
+	ticks: number
 ): number[] {
 	if (lowerBound === 0 && upperBound === 0) return [0];
 

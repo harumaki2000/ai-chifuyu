@@ -1,9 +1,9 @@
-import { bindThis } from "@/decorators.js";
-import Module from "@/module.js";
-import serifs from "@/serifs.js";
+import { bindThis } from '@/decorators.js';
+import Module from '@/module.js';
+import serifs from '@/serifs.js';
 
 export default class extends Module {
-	public readonly name = "sleepReport";
+	public readonly name = 'sleepReport';
 
 	@bindThis
 	public install() {

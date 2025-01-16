@@ -1,6 +1,13 @@
 <h1><p align="center"><img src="./ai.svg" alt="藍" height="200"></p></h1>
 <p align="center">An Ai for Misskey. <a href="./torisetu.md">About Ai</a></p>
 
+## 本家と違う部分があります
+- 地震速報をノート(kmoni)
+- follow meに制限を設定可能に
+- maze/pollを無効に出来るように
+- 反応する言葉を追加
+- aichatを改善(色々)
+
 ## これなに
 Misskey用の日本語Botです。  
 小樽潮風高校Project・花隈千冬の公式二次創作設定に従って制作したBotです。  

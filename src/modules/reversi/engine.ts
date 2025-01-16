@@ -6,7 +6,7 @@ export type Color = boolean;
 const BLACK = true;
 const WHITE = false;
 
-export type MapCell = "null" | "empty";
+export type MapCell = 'null' | 'empty';
 
 export type Options = {
 	isLlotheo: boolean;
@@ -54,17 +54,17 @@ export class Game {
 		//#region Parse map data
 		this.mapWidth = map[0].length;
 		this.mapHeight = map.length;
-		const mapData = map.join("");
+		const mapData = map.join('');
 
 		this.board = mapData
-			.split("")
+			.split('')
 			.map((d) =>
-				d === "-" ? null : d === "b" ? BLACK : d === "w" ? WHITE : undefined,
+				d === '-' ? null : d === 'b' ? BLACK : d === 'w' ? WHITE : undefined
 			);
 
 		this.map = mapData
-			.split("")
-			.map((d) => (d === "-" || d === "b" || d === "w" ? "empty" : "null"));
+			.split('')
+			.map((d) => (d === '-' || d === 'b' || d === 'w' ? 'empty' : 'null'));
 		//#endregion
 
 		// ゲームが始まった時点で片方の色の石しかないか、始まった時点で勝敗が決定するようなマップの場合がある
@@ -143,7 +143,7 @@ export class Game {
 	public mapDataGet(pos: number): MapCell {
 		const [x, y] = this.posToXy(pos);
 		return x < 0 || y < 0 || x >= this.mapWidth || y >= this.mapHeight
-			? "null"
+			? 'null'
 			: this.map[pos];
 	}
 
@@ -159,7 +159,7 @@ export class Game {
 		return this.board[pos] !== null
 			? false // 既に石が置いてある場所には打てない
 			: this.opts.canPutEverywhere
-				? this.mapDataGet(pos) === "empty" // 挟んでなくても置けるモード
+				? this.mapDataGet(pos) === 'empty' // 挟んでなくても置けるモード
 				: this.effects(color, pos).length !== 0; // 相手の石を1つでも反転させられるか
 	}
 
@@ -198,7 +198,7 @@ export class Game {
 					this.opts.loopedBoard &&
 					this.xyToPos(
 						(x = ((x % this.mapWidth) + this.mapWidth) % this.mapWidth),
-						(y = ((y % this.mapHeight) + this.mapHeight) % this.mapHeight),
+						(y = ((y % this.mapHeight) + this.mapHeight) % this.mapHeight)
 					) === initPos
 				) {
 					// 盤面の境界でループし、自分が石を置く位置に戻ってきたとき、挟めるようにしている (ref: Test4のマップ)
@@ -212,7 +212,7 @@ export class Game {
 					return []; // 挟めないことが確定 (盤面外に到達)
 
 				const pos = this.xyToPos(x, y);
-				if (this.mapDataGet(pos) === "null") return []; // 挟めないことが確定 (配置不可能なマスに到達)
+				if (this.mapDataGet(pos) === 'null') return []; // 挟めないことが確定 (配置不可能なマスに到達)
 				const stone = this.board[pos];
 				if (stone === null) return []; // 挟めないことが確定 (石が置かれていないマスに到達)
 				if (stone === enemyColor) found.push(pos); // 挟めるかもしれない (相手の石を発見)
